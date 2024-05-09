@@ -2,6 +2,7 @@ package ua.besf0r.cubauncher.window.main
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.ButtonDefaults
 import androidx.compose.material.Icon
 import androidx.compose.material.Text
@@ -16,107 +17,197 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.ImageBitmap
-import androidx.compose.ui.graphics.painter.Painter
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import ua.besf0r.cubauncher.currentTheme
-import ua.besf0r.cubauncher.window.instance.NewInctance
+import ua.besf0r.cubauncher.window.instance.create.NewInstance
 
 @Composable
 fun bottomColumn(){
     Box(
-        Modifier.fillMaxSize(),
-        contentAlignment = Alignment.BottomEnd
-    ){
-        Box(Modifier
-            .fillMaxWidth()
-            .height(30.dp)
-            .background(currentTheme.fontColor)
-            .align(Alignment.BottomCenter))
-        Box(Modifier
-            .fillMaxWidth()
-            .padding(start = 181.dp, bottom = 30.dp)
-            .height(90.dp)
-            .background(currentTheme.rightColumnColor),
-            contentAlignment = Alignment.CenterStart
+        modifier = Modifier
+            .requiredWidth(width = 720.dp)
+            .requiredHeight(height = 85.dp)
+            .offset(y = 412.dp)
+    ) {
+        Box(
+            modifier = Modifier
+                .requiredWidth(width = 720.dp)
+                .requiredHeight(height = 85.dp)
+                .background(color = currentTheme.panelsColor))
+        TextButton(
+            onClick = { },
+            colors = ButtonDefaults.buttonColors(backgroundColor = Color.Transparent),
+            modifier = Modifier
+                .align(alignment = Alignment.TopStart)
+                .offset(x = 562.dp,
+                    y = 30.dp)
+                .requiredWidth(width = 140.dp)
+                .requiredHeight(height = 30.dp)
         ) {
-            Row{
-                val onNewInstance = remember { mutableStateOf(false) }
-                TextButton(
-                    onClick = { onNewInstance.value = true },
-                    colors = ButtonDefaults.buttonColors(backgroundColor = currentTheme.rightColumnColor),
-                    modifier = Modifier.width(180.dp).height(45.dp)
-                ) {
-                    if (onNewInstance.value) NewInctance {
-                        onNewInstance.value = false
-                    }.openNewInstanceWindow()
-                    Icon(
-                        imageVector = Icons.Filled.AddCircle,
-                        modifier = Modifier
-                            .size(18.dp),
-                        contentDescription = "",
-                        tint = currentTheme.buttonIconColor
-                    )
-                    Text(
-                        " Створити збірку", color = currentTheme.textColor, fontSize = 15.sp,
-                        modifier = Modifier.weight(1f)
-                    )
-                }
-
-                TextButton(
-                    onClick = {},
-                    colors = ButtonDefaults.buttonColors(backgroundColor = currentTheme.rightColumnColor),
-                    modifier = Modifier.width(170.dp).height(45.dp),
-                ) {
-                    Icon(
-                        imageVector = Icons.Filled.Settings,
-                        modifier = Modifier
-                            .size(18.dp),
-                        contentDescription = "",
-                        tint = currentTheme.buttonIconColor
-                    )
-                    Text(
-                        " Налаштування", color = currentTheme.textColor, fontSize = 15.sp,
-                        modifier = Modifier.weight(1f)
-                    )
-                }
-
-                TextButton(
-                    onClick = {},
-                    colors = ButtonDefaults.buttonColors(backgroundColor = currentTheme.rightColumnColor),
-                    modifier = Modifier.width(130.dp).height(45.dp),
-                ) {
-                    Icon(
-                        imageVector = Icons.Filled.Info,
-                        modifier = Modifier
-                            .size(18.dp),
-                        contentDescription = "",
-                        tint = currentTheme.buttonIconColor
-                    )
-                    Text(
-                        " Допомога", color = currentTheme.textColor, fontSize = 15.sp,
-                        modifier = Modifier.weight(1f)
-                    )
-                }
-            }
-            TextButton(
-                onClick = {},
-                colors = ButtonDefaults.buttonColors(backgroundColor = currentTheme.rightColumnColor),
-                modifier = Modifier.width(130.dp).height(45.dp)
-                    .align(Alignment.CenterEnd).padding(end = 15.dp)
+            Box(
+                modifier = Modifier
+                    .requiredWidth(width = 140.dp)
+                    .requiredHeight(height = 30.dp)
             ) {
+                Box(
+                    modifier = Modifier
+                        .requiredWidth(width = 140.dp)
+                        .requiredHeight(height = 30.dp)
+                        .clip(shape = RoundedCornerShape(4.5.dp))
+                        .background(color = currentTheme.buttonColor))
+                Text(
+                    text = "Аккаунт",
+                    color = currentTheme.textColor,
+                    style = TextStyle(fontSize = 14.sp),
+                    modifier = Modifier
+                        .align(alignment = Alignment.Center)
+                        .offset(x = 11.5.dp)
+                        .requiredWidth(width = 67.dp)
+                        .requiredHeight(height = 20.dp))
                 Icon(
                     imageVector = Icons.Filled.AccountCircle,
-                    modifier = Modifier
-                        .size(18.dp),
+                    tint = currentTheme.buttonIconColor,
                     contentDescription = "",
-                    tint = currentTheme.buttonIconColor
-                )
+                    modifier = Modifier
+                        .align(alignment = Alignment.CenterStart)
+                        .offset(x = 28.dp)
+                        .requiredWidth(width = 15.dp)
+                        .requiredHeight(height = 15.dp))
+            }
+        }
+        TextButton(
+            onClick = { },
+            colors = ButtonDefaults.buttonColors(backgroundColor = Color.Transparent),
+            modifier = Modifier
+                .align(alignment = Alignment.TopStart)
+                .offset(x = 413.dp,
+                    y = 31.dp)
+                .requiredWidth(width = 140.dp)
+                .requiredHeight(height = 30.dp)
+        ) {
+            Box(
+                modifier = Modifier
+                    .requiredWidth(width = 140.dp)
+                    .requiredHeight(height = 30.dp)
+            ) {
+                Box(
+                    modifier = Modifier
+                        .requiredWidth(width = 140.dp)
+                        .requiredHeight(height = 30.dp)
+                        .clip(shape = RoundedCornerShape(4.5.dp))
+                        .background(color = currentTheme.buttonColor))
                 Text(
-                    " Аккаунт", color = currentTheme.textColor, fontSize = 15.sp,
-                    modifier = Modifier.weight(1f)
+                    text = "Допомога",
+                    color = currentTheme.textColor,
+                    style = TextStyle(
+                        fontSize = 14.sp),
+                    modifier = Modifier
+                        .align(alignment = Alignment.Center)
+                        .offset(x = 3.5.dp)
+                        .requiredWidth(width = 69.dp)
+                        .requiredHeight(height = 20.dp))
+                Icon(
+                    imageVector = Icons.Filled.Info,
+                    tint = currentTheme.buttonIconColor,
+                    contentDescription = "",
+                    modifier = Modifier
+                        .align(alignment = Alignment.CenterStart)
+                        .offset(x = 20.dp)
+                        .requiredWidth(width = 15.dp)
+                        .requiredHeight(height = 15.dp))
+            }
+        }
+        TextButton(
+            onClick = { },
+            colors = ButtonDefaults.buttonColors(backgroundColor = Color.Transparent),
+            modifier = Modifier
+                .align(alignment = Alignment.TopStart)
+                .offset(x = 231.dp,
+                    y = 31.dp)
+                .requiredWidth(width = 173.dp)
+                .requiredHeight(height = 30.dp)
+        ) {
+            Box(
+                modifier = Modifier
+                    .requiredWidth(width = 173.dp)
+                    .requiredHeight(height = 30.dp)
+            ) {
+                Box(
+                    modifier = Modifier
+                        .requiredWidth(width = 173.dp)
+                        .requiredHeight(height = 30.dp)
+                        .clip(shape = RoundedCornerShape(4.5.dp))
+                        .background(color = currentTheme.buttonColor))
+                Text(
+                    text = "Налаштування",
+                    color = currentTheme.textColor,
+                    style = TextStyle(
+                        fontSize = 14.sp),
+                    modifier = Modifier
+                        .align(alignment = Alignment.Center)
+                        .offset(x = 19.dp)
+                        .requiredWidth(width = 128.dp)
+                        .requiredHeight(height = 17.dp)
                 )
+                Icon(
+                    imageVector = Icons.Filled.Settings,
+                    tint = currentTheme.buttonIconColor,
+                    contentDescription = "",
+                    modifier = Modifier
+                        .align(alignment = Alignment.CenterStart)
+                        .offset(x = 18.dp)
+                        .requiredSize(size = 18.dp))
+            }
+        }
+        val onNewInstance = remember { mutableStateOf(false) }
+        TextButton(
+            onClick = {
+                onNewInstance.value = true
+            },
+            colors = ButtonDefaults.buttonColors(backgroundColor = Color.Transparent),
+            modifier = Modifier
+                .align(alignment = Alignment.TopStart)
+                .offset(x = 46.dp, y = 32.dp)
+                .requiredWidth(width = 176.dp)
+                .requiredHeight(height = 30.dp)
+        ) {
+            if (onNewInstance.value) NewInstance {
+                onNewInstance.value = false
+            }.openNewInstanceWindow()
+            Box(
+                modifier = Modifier
+                    .requiredWidth(width = 176.dp)
+                    .requiredHeight(height = 30.dp)
+            ) {
+                Box(
+                    modifier = Modifier
+                        .requiredWidth(width = 176.dp)
+                        .requiredHeight(height = 30.dp)
+                        .clip(shape = RoundedCornerShape(4.5.dp))
+                        .background(color = currentTheme.buttonColor))
+                Text(
+                    text = "Створити збірку",
+                    color = Color.White,
+                    style = TextStyle(fontSize = 14.sp),
+                    modifier = Modifier
+                        .align(alignment = Alignment.Center)
+                        .offset(x = 4.dp)
+                        .requiredWidth(width = 114.dp)
+                        .requiredHeight(height = 20.dp)
+                )
+                Icon(
+                    imageVector = Icons.Filled.AddCircle,
+                    tint = currentTheme.buttonIconColor,
+                    contentDescription = "",
+                    modifier = Modifier
+                        .align(alignment = Alignment.CenterStart)
+                        .offset(x = 12.dp)
+                        .requiredWidth(width = 17.dp)
+                        .requiredHeight(height = 17.dp))
             }
         }
     }

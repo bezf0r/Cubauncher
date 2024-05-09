@@ -1,16 +1,17 @@
 package ua.besf0r.cubauncher
 
-import androidx.compose.desktop.ui.tooling.preview.Preview
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.window.WindowDraggableArea
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.ApplicationScope
 import androidx.compose.ui.window.Window
-import androidx.compose.ui.window.WindowState
 import androidx.compose.ui.window.application
+import androidx.compose.ui.window.rememberWindowState
 import io.ktor.client.*
 import io.ktor.client.engine.cio.*
 import io.ktor.client.plugins.*
@@ -20,18 +21,18 @@ import kotlinx.coroutines.withContext
 import ua.besf0r.cubauncher.account.AccountsManager
 import ua.besf0r.cubauncher.instance.InstanceManager
 import ua.besf0r.cubauncher.minecraft.version.VersionList
-import ua.besf0r.cubauncher.theme.UiTheme
 import ua.besf0r.cubauncher.util.FileUtil
 import ua.besf0r.cubauncher.window.main.bottomColumn
 import ua.besf0r.cubauncher.window.main.instancesGrid
 import ua.besf0r.cubauncher.window.main.leftColumn
-import java.awt.Dimension
+import ua.besf0r.cubauncher.window.main.windowTitleBar
+import ua.besf0r.cubauncher.window.theme.UiTheme
 import java.io.IOException
 import java.nio.file.FileSystems
 
 val currentTheme = UiTheme.dark
+var selectedInstance: String? = null
 
-@Preview
 @Composable
  fun App() {
     Box(modifier = Modifier
@@ -40,7 +41,7 @@ val currentTheme = UiTheme.dark
     ) {
         leftColumn()
         bottomColumn()
-        instancesGrid()
+        instancesGrid{ selectedInstance = it }
     }
 }
 
@@ -63,8 +64,10 @@ val accountsManager = AccountsManager(workDir)
 
 val instanceManager = InstanceManager(instancesDir)
 
+var applicationScope: ApplicationScope? = null
 
 fun main() = application {
+    applicationScope = this
 
     runBlocking {
         withContext(Dispatchers.IO) {
@@ -72,20 +75,23 @@ fun main() = application {
                 assetsDir, librariesDir, instancesDir, versionsDir)
             try {
                 instanceManager.loadInstances()
-            } catch (e: IOException) { }
-
+            } catch (_: IOException) { }
             VersionList.download()
         }
     }
-
+    val windowState = rememberWindowState(size = DpSize(720.dp, 512.dp))
     Window(
-        state = WindowState(size = DpSize(800.dp, 600.dp)),
-        onCloseRequest = ::exitApplication,
-        title = "Cubauncher"
+        state = windowState,
+        resizable = false,
+        undecorated = true,
+        onCloseRequest = {}
     ) {
-        window.minimumSize = Dimension(800, 600)
-
         App()
+        this@Window.WindowDraggableArea {
+            windowTitleBar (visible = {
+                windowState.isMinimized = !windowState.isMinimized
+            })
+        }
     }
 }
 

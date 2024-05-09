@@ -28,9 +28,7 @@ import kotlin.io.path.deleteIfExists
 import kotlin.io.path.name
 
 
-class ForgeDownloader(
-    val version: String
-) {
+class ForgeDownloader {
     @Serializable(ForgeDeserializer::class)
     data class VersionManifest(val versions: List<Pair<String, List<String>>>)
 
@@ -53,6 +51,7 @@ class ForgeDownloader(
 
     companion object {
         private const val manifestUrl = "https://files.minecraftforge.net/net/minecraftforge/forge/maven-metadata.json"
+
         val versions: VersionManifest = runBlocking {
             withContext(Dispatchers.IO) {
                 Json.decodeFromString<VersionManifest>(httpClient.get(manifestUrl).bodyAsText())
@@ -66,33 +65,35 @@ class ForgeDownloader(
     @Throws(IOException::class)
     fun download(
         progress: MinecraftDownloadListener,
+        forgeVersion: String,
         instance: Instance
     ) {
-        progress.onStageChanged ("Downloading Forge($version)")
-
-        val version = versions.versions.find { it.first == version }?: return
+        progress.onStageChanged("Downloading Forge($forgeVersion)")
 
         val installerUrl = "https://maven.minecraftforge.net/net/minecraftforge/forge/" +
-                "${version.second.last()}/forge-${version.second.last()}-installer.jar"
+                "${forgeVersion}/forge-${forgeVersion}-installer.jar"
 
-        val installerPath = workDir.resolve("forge-installer-${version.second.last()}.jar")
+        val installerPath = workDir.resolve("forge-installer-${forgeVersion}.jar")
+        val installerLog = workDir.resolve("forge-installer-${forgeVersion}.jar.log")
 
-        FileDownloader(installerUrl,null, 0, installerPath)
-            .execute { value, size -> progress.onProgress(value,size) }
+        FileDownloader(installerUrl, null, 0, installerPath)
+            .execute { value, size -> progress.onProgress(value, size) }
 
         var forgeProfile: ForgeProfile? = null
 
         val libraries: MutableList<Path> = mutableListOf()
-        try {
-            ZipFile(installerPath.toFile()).use { zipFile ->
-                val stream = zipFile.getInputStream(zipFile.getEntry(
-                    "version.json")).readAllBytes().decodeToString()
 
+        val zipFile = ZipFile(installerPath.toFile())
+        zipFile.use { zipFile ->
+            val entry = zipFile.getEntry("version.json")
+            if (entry != null) {
+                val stream = zipFile.getInputStream(entry).readBytes().decodeToString()
                 val installProfile = json.decodeFromString<ForgeProfile>(stream)
                 forgeProfile = installProfile
-                zipFile.close()
             }
-        } catch (_: ZipException) { }
+        }
+
+        zipFile.close()
 
         forgeProfile?.libraries?.forEach {
             val artifact = it.downloads.artifact
@@ -103,12 +104,14 @@ class ForgeDownloader(
         val profiles = workDir.resolve("launcher_profiles.json")
         FileUtil.createFileIfNotExists(profiles)
 
-        val process = ProcessBuilder(listOf(
-            OsEnum.javaType,
-            "-jar",
-            installerPath.toFile().name,
-            "--installClient"
-        )).inheritIO().directory(workDir.toFile()).start()
+        val process = ProcessBuilder(
+            listOf(
+                OsEnum.javaType,
+                "-jar",
+                installerPath.toFile().name,
+                "--installClient"
+            )
+        ).inheritIO().directory(workDir.toFile()).start()
 
         GlobalScope.async {
             val inputStream: InputStream = process.inputStream
@@ -122,8 +125,8 @@ class ForgeDownloader(
         process.waitFor()
 
         profiles.deleteIfExists()
-        File(installerPath.name + ".log").toPath().deleteIfExists()
-        installerPath.toAbsolutePath().deleteIfExists()
+        installerLog.deleteIfExists()
+//        installerPath.deleteIfExists()
 
         instance.forge = forgeProfile
         instance.forgeLibraries = libraries

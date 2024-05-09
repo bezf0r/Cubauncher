@@ -2,7 +2,7 @@ import org.jetbrains.compose.desktop.application.dsl.TargetFormat
 
 plugins {
     kotlin("jvm") version "1.9.10"
-    id("org.jetbrains.compose") version "1.6.1"
+    id("org.jetbrains.compose") version "1.6.2"
     kotlin("plugin.serialization") version "1.9.10"
 }
 
@@ -39,9 +39,9 @@ compose.desktop {
     application {
         mainClass = "ua.besf0r.cubauncher.MainKt"
         nativeDistributions {
-            targetFormats(TargetFormat.Exe, TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Deb)
+            targetFormats(TargetFormat.Exe, TargetFormat.Msi, TargetFormat.Deb)
             packageName = "Cubauncher"
-            packageVersion = "1.0.1"
+            packageVersion = "1.0.0"
 
             appResourcesRootDir.set(project.layout.projectDirectory.dir("resources"))
         }

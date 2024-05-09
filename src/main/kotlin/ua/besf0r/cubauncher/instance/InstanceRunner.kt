@@ -21,42 +21,9 @@ class InstanceRunner(
     @OptIn(DelicateCoroutinesApi::class)
     @Composable
     fun run() {
-        account.authenticate()
-        val instanceManager = instanceManager
-        var progress = 0
-
-        StatebleWindow(
-            progress = Pair(true, progress), second = "Зупинити",
-            onSecond = {}, subText = "$progress%"
-        ).stateWindow()
-
         GlobalScope.launch(Dispatchers.IO) {
-            val minecraftVersion = MinecraftDownloader(
-                versionsDir, assetsDir, librariesDir, instance,
-                object : MinecraftDownloadListener {
-                    override fun onStageChanged(stage: String) {}
-
-                    override fun onProgress(value: Long, size: Long) {
-                        if (value == 0L) return
-                        val perProcent = size % 100
-                        if (perProcent == 0L) return
-                        progress = ((value % perProcent).toInt())
-                        println("$progress% Minecraft download")
-                    }
-
-                }).downloadMinecraft(instance.minecraftVersion)
-//            val forgeLibs = ForgeDownloader(instance.minecraftVersion).download(
-//                object : MinecraftDownloadListener {
-//                override fun onStageChanged(stage: String) {}
-//
-//                override fun onProgress(value: Long, size: Long) {
-//                    if (value == 0L) return
-//                    val perProcent = size % 100
-//                    if (perProcent == 0L) return
-//                    progress = ((value % perProcent).toInt())
-//                }
-//
-//            },instance)
+            account.authenticate()
+            val instanceManager = instanceManager
 
             val arguments = getArguments(librariesDir)
 
@@ -70,8 +37,11 @@ class InstanceRunner(
     private fun generateClassPath(): List<String>{
         val classpath: MutableList<String> = mutableListOf()
 
-        val originalClientPath = versionsDir.resolve(instance.versionInfo!!.id)
-            .resolve("${instance.versionInfo!!.id}.jar").toAbsolutePath()
+        val version = instance.versionInfo!!.id
+
+        val originalClientPath = versionsDir.resolve(version).resolve(
+            "${version}.jar"
+        ).toAbsolutePath()
 
         classpath.add(originalClientPath.toString())
 

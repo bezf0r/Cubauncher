@@ -94,7 +94,7 @@ class StatebleWindow (
                         Modifier
                             .fillMaxWidth()
                             .padding(top = 10.dp)
-                            .background(currentTheme.rightColumnColor),
+                            .background(currentTheme.panelsColor),
                         horizontalArrangement = Arrangement.SpaceAround
                     ) {
                         if (first != "") {
