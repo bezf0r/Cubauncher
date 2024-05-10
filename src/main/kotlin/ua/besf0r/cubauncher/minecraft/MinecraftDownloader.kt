@@ -3,10 +3,14 @@ package ua.besf0r.cubauncher.minecraft
 import io.ktor.client.call.*
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
 import ua.besf0r.cubauncher.instance.Instance
 import ua.besf0r.cubauncher.minecraft.version.*
-import ua.besf0r.cubauncher.network.FileDownloader
+import ua.besf0r.cubauncher.network.DownloadListener
+import ua.besf0r.cubauncher.network.DownloadManager
 import ua.besf0r.cubauncher.util.FileUtil
 import ua.besf0r.cubauncher.util.IOUtils
 import ua.besf0r.cubauncher.util.OsEnum
@@ -18,11 +22,10 @@ class MinecraftDownloader(
     private val assetsDir: Path,
     private val librariesDir: Path,
     private val instance: Instance,
-    private val minecraftDownloadListener: MinecraftDownloadListener
+    private val minecraftDownloadListener: DownloadListener
 ) {
     private val resources = "https://resources.download.minecraft.net/"
 
-    @Synchronized
     @Throws(IOException::class)
     fun downloadMinecraft(versionId: String) {
         FileUtil.createDirectoryIfNotExists(versionsDir.resolve(versionId))
@@ -35,10 +38,12 @@ class MinecraftDownloader(
 
         val version = versions.find { it.id == versionId }!!
 
+        val startTime = System.currentTimeMillis()
+
         saveClientJson(version)
 
         println("Downloading client")
-        val versionInfo = downloadClient(version)
+        downloadClient(version)
         println("Downloaded client")
 
         println("Downloading libraries")
@@ -53,13 +58,17 @@ class MinecraftDownloader(
         downloadAssetObjects()
         println("Downloaded assets objects")
 
-        return versionInfo
+
+        val endTime = System.currentTimeMillis()
+        val duration = (endTime - startTime)
+
+        println("ЧАС - $duration")
     }
 
     @Throws(IOException::class)
     private fun saveClientJson(version: VersionManifest.Version) {
         val jsonFile = versionsDir.resolve(version.id).resolve(version.id + ".json")
-        FileDownloader(version.url,version.sha1, 0,jsonFile).execute { _, _ -> }
+        DownloadManager(version.url,version.sha1, 0,jsonFile).execute { _, _ -> }
 
         instance.versionInfo = json.decodeFromString<MinecraftVersion>(
             IOUtils.readUtf8String(jsonFile))
@@ -73,12 +82,11 @@ class MinecraftDownloader(
         val versionInfo: MinecraftVersion = json.decodeFromString(IOUtils.readUtf8String(jsonFile))
 
         val client = versionInfo.downloads?.client ?: return
-        println("Downloading " + version.id + ".jar")
         val jarFile = versionsDir.resolve(version.id).resolve(version.id + ".jar")
         minecraftDownloadListener.onProgress(0, 0)
-        minecraftDownloadListener.onStageChanged("Downloading client")
+        minecraftDownloadListener.onStageChanged("Завантаження клієнта...")
 
-        FileDownloader(client.url, client.sha1,client.size, jarFile)
+        DownloadManager(client.url, client.sha1,client.size, jarFile)
             .execute{ value:Long, size:Long ->
                 minecraftDownloadListener.onProgress(value,size)
         }
@@ -89,7 +97,7 @@ class MinecraftDownloader(
         val nativeLibraries = mutableListOf<Library>()
 
         minecraftDownloadListener.onProgress(0, 0)
-        minecraftDownloadListener.onStageChanged("Downloading libraries")
+        minecraftDownloadListener.onStageChanged("Завантаження бібліотек...")
 
         val versionInfo = instance.versionInfo?: return emptyList()
 
@@ -100,13 +108,12 @@ class MinecraftDownloader(
 //                    if (it.os.arch != EnumOS.arch) return@Library
                 }
             }
+            val downloads = library.downloads ?: return@Library
+            val artifact = downloads.artifact ?: return@Library
 
-            val downloads = library.downloads
-            val artifact = downloads?.artifact
+            val jarFile = librariesDir.resolve(artifact.path?: return@Library)
 
-            val jarFile = librariesDir.resolve(artifact?.path!!)
-
-            FileDownloader(artifact.url!!,artifact.sha1,artifact.size!!.toLong(),jarFile)
+            DownloadManager(artifact.url,artifact.sha1,artifact.size!!.toLong(),jarFile)
                 .execute { value, size ->
                     minecraftDownloadListener.onProgress(value,size)
             }
@@ -117,7 +124,7 @@ class MinecraftDownloader(
     @Throws(IOException::class)
     private fun downloadAssetIndexes() {
         minecraftDownloadListener.onProgress(0, 0)
-        minecraftDownloadListener.onStageChanged("Downloading asset indexes")
+        minecraftDownloadListener.onStageChanged("Завантаження індексу...")
 
         val indexesFolder = assetsDir.resolve("indexes")
         FileUtil.createDirectoryIfNotExists(indexesFolder)
@@ -127,14 +134,14 @@ class MinecraftDownloader(
         val assetId: String = assetIndex.id
         val indexFile = indexesFolder.resolve("$assetId.json")
 
-        FileDownloader(assetIndex.url,assetIndex.sha1,assetIndex.size,indexFile)
+        DownloadManager(assetIndex.url,assetIndex.sha1,assetIndex.size,indexFile)
             .execute { value, size ->
                 minecraftDownloadListener.onProgress(value,size)
         }
     }
     private fun downloadAssetObjects(){
         minecraftDownloadListener.onProgress(0, 0)
-        minecraftDownloadListener.onStageChanged("Downloading asset objects")
+        minecraftDownloadListener.onStageChanged("Завантаження активів...")
 
         val assetId: String = instance.versionInfo?.assetIndex?.id ?: return
 
@@ -148,6 +155,9 @@ class MinecraftDownloader(
         FileUtil.createDirectoryIfNotExists(assetsDownloadFolder)
 
         val objects = index.objects
+
+        var objectsCount = 0
+
         objects.forEach { obj ->
             val asset = obj.value
 
@@ -161,9 +171,10 @@ class MinecraftDownloader(
 
             val url = resources + prefix + "/" + asset.hash
 
-            FileDownloader(url,asset.hash,asset.size,saveAs).execute { value, size ->
-                minecraftDownloadListener.onProgress(value, size)
+            DownloadManager(url,asset.hash,asset.size,saveAs).execute { _,_ ->
+                minecraftDownloadListener.onProgress(objectsCount.toLong(), objects.count().toLong())
             }
+            objectsCount++
         }
     }
 }

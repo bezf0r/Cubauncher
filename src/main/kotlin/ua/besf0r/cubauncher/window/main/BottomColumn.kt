@@ -13,6 +13,7 @@ import androidx.compose.material.icons.filled.AddCircle
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -22,8 +23,12 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import kotlinx.coroutines.cancel
 import ua.besf0r.cubauncher.currentTheme
-import ua.besf0r.cubauncher.window.instance.create.NewInstance
+import ua.besf0r.cubauncher.httpClient
+import ua.besf0r.cubauncher.minecraft.version.VersionManifest
+import ua.besf0r.cubauncher.window.instance.create.createNewInstanceWindow
+import ua.besf0r.cubauncher.window.instance.create.downloadFiles
 
 @Composable
 fun bottomColumn(){
@@ -165,9 +170,7 @@ fun bottomColumn(){
         }
         val onNewInstance = remember { mutableStateOf(false) }
         TextButton(
-            onClick = {
-                onNewInstance.value = true
-            },
+            onClick = { onNewInstance.value = true },
             colors = ButtonDefaults.buttonColors(backgroundColor = Color.Transparent),
             modifier = Modifier
                 .align(alignment = Alignment.TopStart)
@@ -175,9 +178,19 @@ fun bottomColumn(){
                 .requiredWidth(width = 176.dp)
                 .requiredHeight(height = 30.dp)
         ) {
-            if (onNewInstance.value) NewInstance {
-                onNewInstance.value = false
-            }.openNewInstanceWindow()
+            if (onNewInstance.value) createNewInstanceWindow(
+                onDismissed = {
+                    onNewInstance.value = false
+                }, onDownload = {
+                    instanceName: MutableState<String?>,
+                    selectedVersion: MutableState<VersionManifest.Version?>,
+                    isForge: MutableState<Boolean>,
+                    modManagerVersion: MutableState<String>
+                    ->
+                    downloadFiles(instanceName, selectedVersion, isForge,
+                        modManagerVersion, onNewInstance)
+                }
+            )
             Box(
                 modifier = Modifier
                     .requiredWidth(width = 176.dp)

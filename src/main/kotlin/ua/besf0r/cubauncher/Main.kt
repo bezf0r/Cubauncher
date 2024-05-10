@@ -74,7 +74,7 @@ fun main() = application {
             FileUtil.createDirectories(workDir,
                 assetsDir, librariesDir, instancesDir, versionsDir)
             try {
-                instanceManager.loadInstances()
+//                instanceManager.loadInstances()
             } catch (_: IOException) { }
             VersionList.download()
         }

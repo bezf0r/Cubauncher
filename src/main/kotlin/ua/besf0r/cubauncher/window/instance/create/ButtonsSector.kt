@@ -36,7 +36,9 @@ fun buttonsSector(
             .background(color = Color(0xff2d2d2d))
     )
     TextButton(
-        onClick = { canStartDownload.value = true },
+        onClick = {
+            canStartDownload.value = true
+        },
         modifier = Modifier
             .requiredWidth(width = 176.dp)
             .requiredHeight(height = 30.dp)

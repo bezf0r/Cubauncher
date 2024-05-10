@@ -2,11 +2,11 @@ package ua.besf0r.cubauncher.instance
 
 import ua.besf0r.cubauncher.instanceManager
 
-class DownloadInstanceFiles(
+class CreateInstanceFiles(
     private val name: String?,
     private val version: String?
 ) {
-    fun downloadWindow(): Instance? {
+    fun createFiles(): Instance? {
 
         if (version == null) return null
 

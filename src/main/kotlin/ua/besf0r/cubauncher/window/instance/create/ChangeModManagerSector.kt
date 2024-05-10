@@ -24,6 +24,7 @@ import androidx.compose.ui.unit.sp
 import ua.besf0r.cubauncher.currentTheme
 import ua.besf0r.cubauncher.minecraft.forge.ForgeDownloader
 import ua.besf0r.cubauncher.minecraft.version.VersionManifest
+import ua.besf0r.cubauncher.window.element.circularCheckbox
 
 @Composable
 fun changeModsManagerSector(

@@ -7,7 +7,6 @@ import ua.besf0r.cubauncher.*
 import ua.besf0r.cubauncher.account.Account
 import ua.besf0r.cubauncher.minecraft.*
 import ua.besf0r.cubauncher.util.OsEnum
-import ua.besf0r.cubauncher.window.StatebleWindow
 import java.io.*
 import java.nio.charset.StandardCharsets
 import java.nio.file.Path

@@ -13,8 +13,8 @@ import kotlinx.serialization.json.*
 import ua.besf0r.cubauncher.httpClient
 import ua.besf0r.cubauncher.instance.Instance
 import ua.besf0r.cubauncher.librariesDir
-import ua.besf0r.cubauncher.minecraft.MinecraftDownloadListener
-import ua.besf0r.cubauncher.network.FileDownloader
+import ua.besf0r.cubauncher.network.DownloadListener
+import ua.besf0r.cubauncher.network.DownloadManager
 import ua.besf0r.cubauncher.util.FileUtil
 import ua.besf0r.cubauncher.util.OsEnum
 import ua.besf0r.cubauncher.workDir
@@ -22,10 +22,8 @@ import java.io.*
 import java.io.IOException
 import java.nio.charset.StandardCharsets
 import java.nio.file.Path
-import java.util.zip.ZipException
 import java.util.zip.ZipFile
 import kotlin.io.path.deleteIfExists
-import kotlin.io.path.name
 
 
 class ForgeDownloader {
@@ -52,19 +50,27 @@ class ForgeDownloader {
     companion object {
         private const val manifestUrl = "https://files.minecraftforge.net/net/minecraftforge/forge/maven-metadata.json"
 
+        private val requiredVersions = listOf(
+            "1.12.2", "1.13.2", "1.14.2", "1.14.3", "1.14.4", "1.15",
+            "1.15.1", "1.15.2", "1.16.1", "1.16.2", "1.16.3", "1.16.4", "1.16.5", "1.17.1", "1.18",
+            "1.18.1", "1.18.2", "1.19", "1.19.1", "1.19.2", "1.19.3", "1.19.4", "1.20", "1.20.1",
+            "1.20.2", "1.20.3", "1.20.4", "1.20.6"
+        )
+
         val versions: VersionManifest = runBlocking {
             withContext(Dispatchers.IO) {
                 Json.decodeFromString<VersionManifest>(httpClient.get(manifestUrl).bodyAsText())
             }
+        }.run {
+            VersionManifest(versions.filter { its -> its.first in requiredVersions })
         }
     }
 
     private val json = Json { ignoreUnknownKeys = true }
 
-    @OptIn(DelicateCoroutinesApi::class)
     @Throws(IOException::class)
     fun download(
-        progress: MinecraftDownloadListener,
+        progress: DownloadListener,
         forgeVersion: String,
         instance: Instance
     ) {
@@ -76,8 +82,12 @@ class ForgeDownloader {
         val installerPath = workDir.resolve("forge-installer-${forgeVersion}.jar")
         val installerLog = workDir.resolve("forge-installer-${forgeVersion}.jar.log")
 
-        FileDownloader(installerUrl, null, 0, installerPath)
-            .execute { value, size -> progress.onProgress(value, size) }
+        runBlocking {
+            withContext(Dispatchers.IO) {
+                DownloadManager(installerUrl, null, 0, installerPath)
+                    .execute { value, size -> progress.onProgress(value, size) }
+            }
+        }
 
         var forgeProfile: ForgeProfile? = null
 
@@ -113,12 +123,9 @@ class ForgeDownloader {
             )
         ).inheritIO().directory(workDir.toFile()).start()
 
-        GlobalScope.async {
-            val inputStream: InputStream = process.inputStream
-
-            val reader = BufferedReader(InputStreamReader(inputStream, StandardCharsets.UTF_8))
-            var line: String
-            while (reader.readLine().also { line = it } != null) {
+        BufferedReader(InputStreamReader(process.inputStream, StandardCharsets.UTF_8)).use { reader ->
+            var line: String?
+            while ((reader.readLine().also { line = it }) != null) {
                 println(line)
             }
         }

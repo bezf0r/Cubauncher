@@ -21,6 +21,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import ua.besf0r.cubauncher.currentTheme
 import ua.besf0r.cubauncher.minecraft.version.VersionManifest
+import ua.besf0r.cubauncher.window.element.circularCheckbox
 import java.text.SimpleDateFormat
 
 @Composable

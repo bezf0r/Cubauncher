@@ -2,20 +2,21 @@ package ua.besf0r.cubauncher.instance
 
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
-import ua.besf0r.cubauncher.util.OsEnum
 import ua.besf0r.cubauncher.util.FileUtil
 import ua.besf0r.cubauncher.util.IOUtils
+import ua.besf0r.cubauncher.util.OsEnum
 import java.io.File
 import java.io.IOException
 import java.nio.file.Files
 import java.nio.file.Path
 import kotlin.io.path.exists
 
+
 class InstanceManager(
     private val workDir: Path
 ) {
+    val instances = mutableListOf<Instance>()
 
-    val instances: MutableList<Instance> = mutableListOf()
     private val minecraftDirName: String = if (OsEnum.oS == OsEnum.MACOS)
         "minecraft" else ".minecraft"
 
@@ -98,3 +99,4 @@ class InstanceManager(
         return instances.find { it.name == name }
     }
 }
+
