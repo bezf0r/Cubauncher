@@ -133,7 +133,7 @@ class ForgeDownloader {
 
         profiles.deleteIfExists()
         installerLog.deleteIfExists()
-//        installerPath.deleteIfExists()
+        //installerPath.deleteIfExists()
 
         instance.forge = forgeProfile
         instance.forgeLibraries = libraries

@@ -23,12 +23,10 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import kotlinx.coroutines.cancel
 import ua.besf0r.cubauncher.currentTheme
-import ua.besf0r.cubauncher.httpClient
+import ua.besf0r.cubauncher.minecraft.downloadFiles
 import ua.besf0r.cubauncher.minecraft.version.VersionManifest
 import ua.besf0r.cubauncher.window.instance.create.createNewInstanceWindow
-import ua.besf0r.cubauncher.window.instance.create.downloadFiles
 
 @Composable
 fun bottomColumn(){

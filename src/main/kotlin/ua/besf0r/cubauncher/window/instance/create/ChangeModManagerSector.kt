@@ -81,7 +81,7 @@ fun changeModsManagerSector(
                 if (isSelectedForge.value && selectedVersion.value != null) {
                     val version = ForgeDownloader.versions.versions
                         .find { it.first == selectedVersion.value!!.id }?.second ?: listOf()
-                    createModificationVersionsGrid(version){
+                    createModificationVersionsGrid(version.reversed()){
                         onVersionChange(it)
                     }
                 }

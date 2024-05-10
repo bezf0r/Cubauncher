@@ -77,60 +77,7 @@ fun createNewInstanceWindow(onDismissed: () -> Unit,
             )
         }
         buttonsSector(isDownloading){ onDismissed() }
-
     }
 }
 
-@OptIn(DelicateCoroutinesApi::class)
-@Composable
-fun downloadFiles(
-    instanceName: MutableState<String?>,
-    selectedVersion: MutableState<VersionManifest.Version?>,
-    isForge: MutableState<Boolean>,
-    modManagerVersion: MutableState<String>,
-    isDismiss: MutableState<Boolean>
-) {
-    val rememberStage = remember { mutableStateOf<String?>(null) }
-    val rememberRate = remember { mutableStateOf(0) }
-
-    val downloadListener =
-        object : DownloadListener {
-            override fun onStageChanged(stage: String) {
-                rememberStage.value = stage
-            }
-
-            override fun onProgress(value: Long, size: Long) {
-                if (value == 0L) return
-                val perRate = size % 100
-                if (perRate == 0L) return
-                rememberRate.value = ((value % perRate).toInt())
-            }
-        }
-
-    progressAlert(rememberStage, rememberRate) {
-        isDismiss.value = false
-    }
-
-    runBlocking {
-        GlobalScope.launch(Dispatchers.IO) {
-            val instance = CreateInstanceFiles(
-                instanceName.value,
-                selectedVersion.value?.id
-            ).createFiles() ?: return@launch
-
-            MinecraftDownloader(
-                versionsDir, assetsDir, librariesDir,
-                instance, downloadListener
-            ).downloadMinecraft(instance.minecraftVersion)
-
-            if (isForge.value) {
-                ForgeDownloader().download(
-                    downloadListener, modManagerVersion.value, instance
-                )
-            }
-            instanceManager.save(instance)
-            isDismiss.value = false
-        }
-    }
-}
 

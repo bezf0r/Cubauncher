@@ -86,7 +86,6 @@ class InstanceManager(
         instances.remove(instance)
     }
 
-
     private fun getInstanceDir(instance: Instance): Path {
         return workDir.resolve(instance.name)
     }
