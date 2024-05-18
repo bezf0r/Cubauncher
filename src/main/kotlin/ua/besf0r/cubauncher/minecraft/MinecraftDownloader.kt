@@ -10,9 +10,9 @@ import ua.besf0r.cubauncher.instanceManager
 import ua.besf0r.cubauncher.minecraft.version.*
 import ua.besf0r.cubauncher.network.DownloadListener
 import ua.besf0r.cubauncher.network.DownloadManager
-import ua.besf0r.cubauncher.util.FileUtil
-import ua.besf0r.cubauncher.util.IOUtils
-import ua.besf0r.cubauncher.util.OsEnum
+import ua.besf0r.cubauncher.network.file.FilesManager
+import ua.besf0r.cubauncher.network.file.IOUtil
+import ua.besf0r.cubauncher.minecraft.os.OperatingSystem
 import java.io.IOException
 import java.nio.file.Path
 
@@ -32,12 +32,12 @@ class MinecraftDownloader(
         currentJob.async {
             currentInstance = instance
 
-            FileUtil.createDirectoryIfNotExists(versionsDir.resolve(instance.minecraftVersion))
+            FilesManager.createDirectoryIfNotExists(versionsDir.resolve(instance.minecraftVersion))
 
-            val manifestRead = IOUtils.readUtf8String(
+            val manifestRead = IOUtil.readUtf8String(
                 versionsDir.resolve("version_manifest_v2.json")
             )
-            val manifest: VersionManifest.VersionManifest = json.decodeFromString(manifestRead)
+            val manifest = json.decodeFromString<VersionManifest.VersionManifest>(manifestRead)
 
             val versions = manifest.versions
 
@@ -62,10 +62,10 @@ class MinecraftDownloader(
     private fun saveClientJson(version: VersionManifest.Version) {
         if (!currentJob.isActive) return
         val jsonFile = versionsDir.resolve(version.id).resolve(version.id + ".json")
-        DownloadManager(version.url,version.sha1, 0,jsonFile).execute { _, _ -> }
+        DownloadManager(version.url,version.sha1,
+            0,jsonFile).execute { _, _ -> }
 
-        currentInstance!!.versionInfo = json.decodeFromString<MinecraftVersion>(
-            IOUtils.readUtf8String(jsonFile))
+        currentInstance!!.versionInfo = json.decodeFromString<MinecraftVersion>(IOUtil.readUtf8String(jsonFile))
     }
 
     private val json = Json { ignoreUnknownKeys = true }
@@ -74,7 +74,7 @@ class MinecraftDownloader(
     private fun downloadClient(version: VersionManifest.Version) {
         if (!currentJob.isActive) return
         val jsonFile = versionsDir.resolve(version.id).resolve(version.id + ".json")
-        val versionInfo: MinecraftVersion = json.decodeFromString(IOUtils.readUtf8String(jsonFile))
+        val versionInfo: MinecraftVersion = json.decodeFromString(IOUtil.readUtf8String(jsonFile))
 
         val client = versionInfo.downloads?.client ?: return
         val jarFile = versionsDir.resolve(version.id).resolve(version.id + ".jar")
@@ -101,7 +101,7 @@ class MinecraftDownloader(
             if (!currentJob.isActive) return@Library
             if (library.rules != null) {
                 library.rules.forEach {
-                    if (it.os?.name != OsEnum.osName) return@Library
+                    if (it.os?.name != OperatingSystem.osName) return@Library
 //                    if (it.os.arch != EnumOS.arch) return@Library
                 }
             }
@@ -125,7 +125,7 @@ class MinecraftDownloader(
         minecraftDownloadListener.onStageChanged("Завантаження індексу...")
 
         val indexesFolder = assetsDir.resolve("indexes")
-        FileUtil.createDirectoryIfNotExists(indexesFolder)
+        FilesManager.createDirectoryIfNotExists(indexesFolder)
 
         val assetIndex = currentInstance!!.versionInfo?.assetIndex ?: return
 
@@ -146,13 +146,13 @@ class MinecraftDownloader(
         val assetId: String = currentInstance!!.versionInfo?.assetIndex?.id ?: return
 
         val index = json.decodeFromString<AssetsIndexes>(
-            IOUtils.readUtf8String(
+            IOUtil.readUtf8String(
                 assetsDir.resolve("indexes").resolve("$assetId.json")
             )
         )
 
         val assetsDownloadFolder = assetsDir.resolve("objects")
-        FileUtil.createDirectoryIfNotExists(assetsDownloadFolder)
+        FilesManager.createDirectoryIfNotExists(assetsDownloadFolder)
 
         val objects = index.objects
 

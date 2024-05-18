@@ -1,10 +1,10 @@
-package ua.besf0r.cubauncher.util
+package ua.besf0r.cubauncher.network.file
 
 import java.io.IOException
 import java.nio.file.*
 import java.nio.file.attribute.BasicFileAttributes
 
-object FileUtil {
+object FilesManager {
     private val deleteVisitor = object : SimpleFileVisitor<Path>() {
         override fun visitFile(file: Path, attrs: BasicFileAttributes): FileVisitResult {
             Files.delete(file)
@@ -32,17 +32,19 @@ object FileUtil {
     }
 
     @Throws(IOException::class)
-    fun createFileIfNotExists(file: Path) {
-        if (!Files.exists(file)) {
-            Files.createDirectories(file.parent)
-            Files.createFile(file)
+    fun Path.createFileIfNotExists() {
+        if (!Files.exists(this)) {
+            Files.createFile(this)
         }
     }
 
     fun createDirectories(vararg directories: Path) {
         directories.forEach {
-            try { createDirectoryIfNotExists(it) } catch (e: IOException) {
-                println("Unable to create launcher directories") }
+            try {
+                createDirectoryIfNotExists(it)
+            } catch (e: IOException) {
+                println("Unable to create launcher directories")
+            }
         }
     }
 }

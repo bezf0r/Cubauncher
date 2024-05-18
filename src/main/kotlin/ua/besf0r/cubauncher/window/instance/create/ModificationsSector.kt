@@ -21,10 +21,10 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import ua.besf0r.cubauncher.currentTheme
-import ua.besf0r.cubauncher.minecraft.forge.ForgeDownloader
+import ua.besf0r.cubauncher.minecraft.forge.version.ForgeVersionManifest
 import ua.besf0r.cubauncher.minecraft.version.VersionManifest
-import ua.besf0r.cubauncher.window.element.circularCheckbox
+import ua.besf0r.cubauncher.settingsManager
+import ua.besf0r.cubauncher.window.circularCheckbox
 
 @Composable
 fun changeModsManagerSector(
@@ -44,7 +44,7 @@ fun changeModsManagerSector(
             modifier = Modifier
                 .requiredWidth(width = 500.dp)
                 .requiredHeight(height = 180.dp)
-                .background(color = currentTheme.panelsColor)
+                .background(color = settingsManager.settings.currentTheme.panelsColor)
         )
         Box(
             modifier = Modifier
@@ -53,7 +53,7 @@ fun changeModsManagerSector(
                 .requiredWidth(width = 203.dp)
                 .requiredHeight(height = 170.dp)
                 .clip(shape = RoundedCornerShape(5.dp))
-                .background(color = currentTheme.fontColor)
+                .background(color = settingsManager.settings.currentTheme.fontColor)
         ) {
             Box(
                 modifier = Modifier
@@ -62,11 +62,11 @@ fun changeModsManagerSector(
                     .requiredWidth(width = 191.dp)
                     .requiredHeight(height = 15.dp)
                     .clip(shape = RoundedCornerShape(5.dp))
-                    .background(color = currentTheme.panelsColor)
+                    .background(color = settingsManager.settings.currentTheme.panelsColor)
             )
             Text(
                 text = "Версія",
-                color = currentTheme.textColor,
+                color = settingsManager.settings.currentTheme.textColor,
                 style = TextStyle(fontSize = 13.sp),
                 modifier = Modifier
                     .align(alignment = Alignment.TopStart)
@@ -79,8 +79,10 @@ fun changeModsManagerSector(
                 createModificationVersionsGrid(listOf())
             } else {
                 if (isSelectedForge.value && selectedVersion.value != null) {
-                    val version = ForgeDownloader.versions.versions
-                        .find { it.first == selectedVersion.value!!.id }?.second ?: listOf()
+                    val forgeVersions = ForgeVersionManifest.versions.versions
+                    val version = forgeVersions.find {
+                        it.first == selectedVersion.value!!.id
+                    }?.second ?: listOf()
                     createModificationVersionsGrid(version.reversed()){
                         onVersionChange(it)
                     }
@@ -206,7 +208,7 @@ private fun createModificationVersionsGrid(
                     },
                     colors = ButtonDefaults.buttonColors(
                         backgroundColor =
-                        if (selectedVersion.value == it) currentTheme.selectedButtonColor
+                        if (selectedVersion.value == it) settingsManager.settings.currentTheme.selectedButtonColor
                         else Color.Transparent
                     ),
                     modifier = Modifier
@@ -219,7 +221,7 @@ private fun createModificationVersionsGrid(
                     ) {
                         Text(
                             text = it,
-                            color = currentTheme.textColor,
+                            color = settingsManager.settings.currentTheme.textColor,
                             textAlign = TextAlign.Center,
                             style = TextStyle(fontSize = 13.sp),
                             modifier = Modifier

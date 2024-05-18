@@ -1,7 +1,8 @@
-package ua.besf0r.cubauncher.window.main
+package ua.besf0r.cubauncher.window
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.window.WindowDraggableArea
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Close
@@ -12,6 +13,9 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.DialogWindowScope
+import androidx.compose.ui.window.FrameWindowScope
+import androidx.compose.ui.window.WindowState
 import ua.besf0r.cubauncher.applicationScope
 
 @Composable
@@ -28,8 +32,7 @@ fun windowTitleBar(
     ) {
         TextButton(
             onClick = {
-                if (close != null){ close()
-                }else{ applicationScope!!.exitApplication() }
+                if (close != null) close() else applicationScope!!.exitApplication()
             },
             colors = ButtonDefaults.buttonColors(backgroundColor = Color(0xffd9d9d9)),
             modifier = Modifier
@@ -81,6 +84,18 @@ fun windowTitleBar(
                 .offset(x = 37.dp)
                 .requiredWidth(width = 155.dp)
                 .wrapContentHeight(align = Alignment.CenterVertically)
+        )
+    }
+}
+@Composable
+fun FrameWindowScope.createMainTitleBar(
+    windowState: WindowState, onDismissed: () -> Unit = {}) {
+    this.WindowDraggableArea {
+        windowTitleBar(
+            visible = {
+                windowState.isMinimized = !windowState.isMinimized
+            },
+            close = { onDismissed() }
         )
     }
 }

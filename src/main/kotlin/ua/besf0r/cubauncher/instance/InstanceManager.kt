@@ -2,9 +2,10 @@ package ua.besf0r.cubauncher.instance
 
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
-import ua.besf0r.cubauncher.util.FileUtil
-import ua.besf0r.cubauncher.util.IOUtils
-import ua.besf0r.cubauncher.util.OsEnum
+import ua.besf0r.cubauncher.network.file.FilesManager
+import ua.besf0r.cubauncher.network.file.IOUtil
+import ua.besf0r.cubauncher.minecraft.os.OperatingSystem
+import ua.besf0r.cubauncher.network.file.FilesManager.createFileIfNotExists
 import java.io.File
 import java.io.IOException
 import java.nio.file.Files
@@ -17,15 +18,14 @@ class InstanceManager(
 ) {
     val instances = mutableListOf<Instance>()
 
-    private val minecraftDirName: String = if (OsEnum.oS == OsEnum.MACOS)
+    private val minecraftDirName: String = if (OperatingSystem.oS == OperatingSystem.MACOS)
         "minecraft" else ".minecraft"
 
     @Throws(IOException::class)
     fun loadInstances() {
         val paths = mutableListOf<File>()
-        workDir.toFile().listFiles()?.forEach {
-            paths.add(it)
-        }
+
+        workDir.toFile().listFiles()?.forEach { paths.add(it) }
         paths.forEach {
             if (!it.isDirectory) return@forEach
 
@@ -33,7 +33,7 @@ class InstanceManager(
             if (!instanceFile.exists()) return@forEach
 
             val instance = Json.decodeFromString<Instance>(
-                IOUtils.readUtf8String(instanceFile.toPath()))
+                IOUtil.readUtf8String(instanceFile.toPath()))
             instances.add(instance)
         }
     }
@@ -49,11 +49,11 @@ class InstanceManager(
     }
 
     @Throws(IOException::class)
-    fun save(instance: Instance) {
+    fun update(instance: Instance) {
         val instanceDir = getInstanceDir(instance)
         if (!instanceDir.exists()) return
         val instanceFile = instanceDir.resolve("instance.json")
-        IOUtils.writeUtf8String(instanceFile, Json.encodeToString<Instance>(instance))
+        IOUtil.writeUtf8String(instanceFile, Json.encodeToString<Instance>(instance))
     }
 
     @Throws(IOException::class)
@@ -65,23 +65,23 @@ class InstanceManager(
         createDirName(instance)
         val instanceDir = getInstanceDir(instance)
 
-        FileUtil.createDirectoryIfNotExists(instanceDir)
+        FilesManager.createDirectoryIfNotExists(instanceDir)
         val minecraftDir = instanceDir.resolve(minecraftDirName)
-        FileUtil.createDirectoryIfNotExists(minecraftDir)
+        FilesManager.createDirectoryIfNotExists(minecraftDir)
         val instanceFile = instanceDir.resolve("instance.json")
-        FileUtil.createFileIfNotExists(instanceDir)
+        instanceDir.createFileIfNotExists()
 
-        IOUtils.writeUtf8String(instanceFile, Json.encodeToString(instance))
+        IOUtil.writeUtf8String(instanceFile, Json.encodeToString(instance))
 
         return instance
     }
 
     @Throws(IOException::class)
     fun deleteInstance(name: String) {
-        val instance = getInstanceByName(name)
-        val instanceDir = getInstanceDir(instance!!)
+        val instance = getInstanceByName(name)?: return
+        val instanceDir = getInstanceDir(instance)
         if (Files.exists(instanceDir)) {
-            FileUtil.deleteDirectoryRecursively(instanceDir)
+            FilesManager.deleteDirectoryRecursively(instanceDir)
         }
         instances.remove(instance)
     }

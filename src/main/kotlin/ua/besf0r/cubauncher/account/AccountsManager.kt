@@ -3,8 +3,9 @@ package ua.besf0r.cubauncher.account
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import ua.besf0r.cubauncher.accountsManager
-import ua.besf0r.cubauncher.util.FileUtil
-import ua.besf0r.cubauncher.util.IOUtils
+import ua.besf0r.cubauncher.network.file.FilesManager
+import ua.besf0r.cubauncher.network.file.FilesManager.createFileIfNotExists
+import ua.besf0r.cubauncher.network.file.IOUtil
 import java.io.IOException
 import java.nio.charset.StandardCharsets
 import java.nio.file.Files
@@ -16,7 +17,7 @@ class AccountsManager(workDir: Path) {
 
     init {
         try {
-            FileUtil.createFileIfNotExists(accountsFile)
+            accountsFile.createFileIfNotExists()
         } catch (e: IOException) {
             throw RuntimeException(e)
         }
@@ -30,7 +31,7 @@ class AccountsManager(workDir: Path) {
     @Throws(IOException::class)
     fun loadAccounts() {
         val accounts = Json.decodeFromString<Map<String, Account>>(
-            IOUtils.readUtf8String(
+            IOUtil.readUtf8String(
                 accountsFile
             )
         )

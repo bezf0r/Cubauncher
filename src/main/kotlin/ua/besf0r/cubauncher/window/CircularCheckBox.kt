@@ -1,4 +1,4 @@
-package ua.besf0r.cubauncher.window.element
+package ua.besf0r.cubauncher.window
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -12,7 +12,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import ua.besf0r.cubauncher.currentTheme
+import ua.besf0r.cubauncher.settingsManager
 
 @Composable
 fun circularCheckbox(
@@ -23,7 +23,8 @@ fun circularCheckbox(
     Box(
         modifier = modifier
             .size(15.dp)
-            .background(color = currentTheme.fontColor, shape = CircleShape)
+            .background(color = settingsManager.settings.currentTheme.fontColor,
+                shape = CircleShape)
             .clickable { onCheckedChange(!checked) },
         contentAlignment = Alignment.Center
     ) {
@@ -31,7 +32,7 @@ fun circularCheckbox(
             Icon(
                 imageVector = Icons.Default.Check,
                 contentDescription = "",
-                tint = currentTheme.textColor,
+                tint = settingsManager.settings.currentTheme.textColor,
                 modifier = Modifier.size(15.dp)
             )
         }

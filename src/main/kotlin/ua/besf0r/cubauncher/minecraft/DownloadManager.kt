@@ -6,7 +6,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import kotlinx.coroutines.*
 import ua.besf0r.cubauncher.*
-import ua.besf0r.cubauncher.instance.CreateInstanceFiles
+import ua.besf0r.cubauncher.instance.CreateInstance
 import ua.besf0r.cubauncher.minecraft.forge.ForgeDownloader
 import ua.besf0r.cubauncher.minecraft.version.VersionManifest
 import ua.besf0r.cubauncher.network.DownloadListener
@@ -53,7 +53,7 @@ fun downloadFiles(
 
     currentJob.launch {
         runBlocking {
-            val instance = CreateInstanceFiles(
+            val instance = CreateInstance(
                 instanceName.value,
                 selectedVersion.value?.id
             ).createFiles() ?: return@runBlocking
@@ -64,9 +64,16 @@ fun downloadFiles(
                 ForgeDownloader().download(downloadListener,
                     modManagerVersion.value, instance)
             }
-            instanceManager.save(instance)
+            instanceManager.update(instance)
             isDismiss.value = false
         }
     }
 }
+typealias ArgumentsForDownload = (
+    instanceName: MutableState<String?>,
+    selectedVersion: MutableState<VersionManifest.Version?>,
+    isForge: MutableState<Boolean>,
+    modManagerVersion: MutableState<String>
+) -> Unit
+
 

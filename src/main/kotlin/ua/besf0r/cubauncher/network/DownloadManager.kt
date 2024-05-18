@@ -9,7 +9,8 @@ import io.ktor.util.cio.*
 import io.ktor.utils.io.*
 import kotlinx.coroutines.*
 import ua.besf0r.cubauncher.httpClient
-import ua.besf0r.cubauncher.util.FileUtil
+import ua.besf0r.cubauncher.network.file.FilesManager
+import ua.besf0r.cubauncher.network.file.FilesManager.createFileIfNotExists
 import java.io.FileInputStream
 import java.io.IOException
 import java.io.InputStream
@@ -41,24 +42,31 @@ class DownloadManager (
         return hexString.toString()
     }
     @Throws(IOException::class)
-    fun execute(downloadListener: (value:Long, size:Long) -> Unit) {
-        url ?: return
+    fun execute(downloadProgress: DownloadProgress) {
+        try {
+            createDirectoriesAndFile()
+            downloadFile(downloadProgress)
+        } catch (_: Exception) {
+        }
+    }
 
-        createDirectoriesAndFile()
+    private fun downloadFile(downloadProgress: DownloadProgress) {
+        url ?: return
         runBlocking {
-            withContext(Dispatchers.IO){
+            withContext(Dispatchers.IO) {
                 if (!shouldDownloadFile()) return@withContext
                 httpClient.get(url) {
                     onDownload { bytesSentTotal, _ ->
-                        downloadListener(bytesSentTotal, declaredSize)
+                        downloadProgress(bytesSentTotal, declaredSize)
                     }
                 }.bodyAsChannel().copyTo(saveAs.toFile().writeChannel())
             }
         }
     }
+
     private fun createDirectoriesAndFile() {
-        FileUtil.createDirectories(saveAs.parent)
-        FileUtil.createFileIfNotExists(saveAs)
+        FilesManager.createDirectories(saveAs.parent)
+        saveAs.createFileIfNotExists()
     }
     private suspend fun shouldDownloadFile(): Boolean {
         val fileSize = withContext(Dispatchers.IO) {

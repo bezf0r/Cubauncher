@@ -8,7 +8,7 @@ import kotlinx.serialization.encoding.*
 import kotlinx.serialization.json.Json
 import ua.besf0r.cubauncher.minecraft.forge.ForgeProfile
 import ua.besf0r.cubauncher.minecraft.version.MinecraftVersion
-import ua.besf0r.cubauncher.util.IOUtils
+import ua.besf0r.cubauncher.network.file.IOUtil
 import ua.besf0r.cubauncher.versionsDir
 import java.nio.file.Path
 import java.nio.file.Paths
@@ -19,8 +19,6 @@ import kotlin.io.path.pathString
 class Instance(
     var name: String, var minecraftVersion: String
 ) {
-    var minimumMemory = 512
-    var maximumMemory = 2048
 
     @Serializable(MinecraftVersionSerializer::class)
     var versionInfo: MinecraftVersion? = null
@@ -56,7 +54,6 @@ object MinecraftVersionSerializer : KSerializer<MinecraftVersion?> {
 
     override fun deserialize(decoder: Decoder): MinecraftVersion {
         val path = decoder.decodeString()
-        return json.decodeFromString<MinecraftVersion>(
-            IOUtils.readUtf8String(Path(path)))
+        return json.decodeFromString<MinecraftVersion>(IOUtil.readUtf8String(Path(path)))
     }
 }

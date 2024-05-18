@@ -19,9 +19,9 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import ua.besf0r.cubauncher.currentTheme
 import ua.besf0r.cubauncher.minecraft.version.VersionManifest
-import ua.besf0r.cubauncher.window.element.circularCheckbox
+import ua.besf0r.cubauncher.settingsManager
+import ua.besf0r.cubauncher.window.circularCheckbox
 import java.text.SimpleDateFormat
 
 @Composable
@@ -42,7 +42,7 @@ fun changeVersionSector(
             modifier = Modifier
                 .requiredWidth(width = 710.dp)
                 .requiredHeight(height = 191.dp)
-                .background(color = currentTheme.panelsColor)
+                .background(color = settingsManager.settings!!.currentTheme.panelsColor)
         )
         Box(
             modifier = Modifier
@@ -56,7 +56,7 @@ fun changeVersionSector(
                     .requiredWidth(width = 450.dp)
                     .requiredHeight(height = 181.dp)
                     .clip(shape = RoundedCornerShape(5.dp))
-                    .background(color = currentTheme.fontColor)
+                    .background(color = settingsManager.settings!!.currentTheme.fontColor)
             )
             Box(
                 modifier = Modifier
@@ -65,11 +65,11 @@ fun changeVersionSector(
                     .requiredWidth(width = 440.dp)
                     .requiredHeight(height = 15.dp)
                     .clip(shape = RoundedCornerShape(5.dp))
-                    .background(color = currentTheme.panelsColor)
+                    .background(color = settingsManager.settings!!.currentTheme.panelsColor)
             )
             Text(
                 text = "Дата виходу",
-                color = currentTheme.textColor,
+                color = settingsManager.settings!!.currentTheme.textColor,
                 style = TextStyle(fontSize = 13.sp),
                 modifier = Modifier
                     .align(alignment = Alignment.TopStart)
@@ -79,7 +79,7 @@ fun changeVersionSector(
             )
             Text(
                 text = "Версія",
-                color = currentTheme.textColor,
+                color = settingsManager.settings!!.currentTheme.textColor,
                 style = TextStyle(fontSize = 13.sp),
                 modifier = Modifier
                     .align(alignment = Alignment.TopStart)
@@ -99,7 +99,7 @@ fun changeVersionSector(
                             onClick = { onVersionChange(it) },
                             colors = ButtonDefaults.buttonColors(
                                 backgroundColor =
-                                if (selectedVersion.value == it) currentTheme.selectedButtonColor
+                                if (selectedVersion.value == it) settingsManager.settings!!.currentTheme.selectedButtonColor
                                 else Color.Transparent
                             ),
                             modifier = Modifier
@@ -113,7 +113,7 @@ fun changeVersionSector(
                             ) {
                                 Text(
                                     text = it.id,
-                                    color = currentTheme.textColor,
+                                    color = settingsManager.settings!!.currentTheme.textColor,
                                     textAlign = TextAlign.Center,
                                     style = TextStyle(fontSize = 13.sp),
                                     modifier = Modifier
@@ -129,7 +129,7 @@ fun changeVersionSector(
                                 val formattedDate = outputFormat.format(date)
                                 Text(
                                     text = formattedDate,
-                                    color = currentTheme.textColor,
+                                    color = settingsManager.settings!!.currentTheme.textColor,
                                     textAlign = TextAlign.Center,
                                     style = TextStyle(fontSize = 13.sp),
                                     modifier = Modifier

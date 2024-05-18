@@ -23,13 +23,14 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import ua.besf0r.cubauncher.currentTheme
 import ua.besf0r.cubauncher.minecraft.downloadFiles
 import ua.besf0r.cubauncher.minecraft.version.VersionManifest
+import ua.besf0r.cubauncher.settingsManager
 import ua.besf0r.cubauncher.window.instance.create.createNewInstanceWindow
+import ua.besf0r.cubauncher.window.settings.settingWindow
 
 @Composable
-fun bottomColumn(){
+fun bottomColumn(currentLog: MutableState<String>){
     Box(
         modifier = Modifier
             .requiredWidth(width = 720.dp)
@@ -40,7 +41,7 @@ fun bottomColumn(){
             modifier = Modifier
                 .requiredWidth(width = 720.dp)
                 .requiredHeight(height = 85.dp)
-                .background(color = currentTheme.panelsColor))
+                .background(color = settingsManager.settings.currentTheme.panelsColor))
         TextButton(
             onClick = { },
             colors = ButtonDefaults.buttonColors(backgroundColor = Color.Transparent),
@@ -61,10 +62,10 @@ fun bottomColumn(){
                         .requiredWidth(width = 140.dp)
                         .requiredHeight(height = 30.dp)
                         .clip(shape = RoundedCornerShape(4.5.dp))
-                        .background(color = currentTheme.buttonColor))
+                        .background(color = settingsManager.settings.currentTheme.buttonColor))
                 Text(
                     text = "Аккаунт",
-                    color = currentTheme.textColor,
+                    color = settingsManager.settings.currentTheme.textColor,
                     style = TextStyle(fontSize = 14.sp),
                     modifier = Modifier
                         .align(alignment = Alignment.Center)
@@ -73,7 +74,7 @@ fun bottomColumn(){
                         .requiredHeight(height = 20.dp))
                 Icon(
                     imageVector = Icons.Filled.AccountCircle,
-                    tint = currentTheme.buttonIconColor,
+                    tint = settingsManager.settings.currentTheme.buttonIconColor,
                     contentDescription = "",
                     modifier = Modifier
                         .align(alignment = Alignment.CenterStart)
@@ -102,10 +103,10 @@ fun bottomColumn(){
                         .requiredWidth(width = 140.dp)
                         .requiredHeight(height = 30.dp)
                         .clip(shape = RoundedCornerShape(4.5.dp))
-                        .background(color = currentTheme.buttonColor))
+                        .background(color = settingsManager.settings.currentTheme.buttonColor))
                 Text(
                     text = "Допомога",
-                    color = currentTheme.textColor,
+                    color = settingsManager.settings.currentTheme.textColor,
                     style = TextStyle(
                         fontSize = 14.sp),
                     modifier = Modifier
@@ -115,7 +116,7 @@ fun bottomColumn(){
                         .requiredHeight(height = 20.dp))
                 Icon(
                     imageVector = Icons.Filled.Info,
-                    tint = currentTheme.buttonIconColor,
+                    tint = settingsManager.settings.currentTheme.buttonIconColor,
                     contentDescription = "",
                     modifier = Modifier
                         .align(alignment = Alignment.CenterStart)
@@ -124,8 +125,12 @@ fun bottomColumn(){
                         .requiredHeight(height = 15.dp))
             }
         }
+        val openSettingWindow = mutableStateOf(false)
+
         TextButton(
-            onClick = { },
+            onClick = {
+               openSettingWindow.value = true
+            },
             colors = ButtonDefaults.buttonColors(backgroundColor = Color.Transparent),
             modifier = Modifier
                 .align(alignment = Alignment.TopStart)
@@ -134,6 +139,10 @@ fun bottomColumn(){
                 .requiredWidth(width = 173.dp)
                 .requiredHeight(height = 30.dp)
         ) {
+            if (openSettingWindow.value) settingWindow(currentLog){
+                openSettingWindow.value = false
+            }
+
             Box(
                 modifier = Modifier
                     .requiredWidth(width = 173.dp)
@@ -144,10 +153,10 @@ fun bottomColumn(){
                         .requiredWidth(width = 173.dp)
                         .requiredHeight(height = 30.dp)
                         .clip(shape = RoundedCornerShape(4.5.dp))
-                        .background(color = currentTheme.buttonColor))
+                        .background(color = settingsManager.settings.currentTheme.buttonColor))
                 Text(
                     text = "Налаштування",
-                    color = currentTheme.textColor,
+                    color = settingsManager.settings.currentTheme.textColor,
                     style = TextStyle(
                         fontSize = 14.sp),
                     modifier = Modifier
@@ -158,7 +167,7 @@ fun bottomColumn(){
                 )
                 Icon(
                     imageVector = Icons.Filled.Settings,
-                    tint = currentTheme.buttonIconColor,
+                    tint = settingsManager.settings.currentTheme.buttonIconColor,
                     contentDescription = "",
                     modifier = Modifier
                         .align(alignment = Alignment.CenterStart)
@@ -185,8 +194,9 @@ fun bottomColumn(){
                     isForge: MutableState<Boolean>,
                     modManagerVersion: MutableState<String>
                     ->
-                    downloadFiles(instanceName, selectedVersion, isForge,
-                        modManagerVersion, onNewInstance)
+
+                    downloadFiles(instanceName, selectedVersion,
+                        isForge, modManagerVersion, onNewInstance)
                 }
             )
             Box(
@@ -199,7 +209,7 @@ fun bottomColumn(){
                         .requiredWidth(width = 176.dp)
                         .requiredHeight(height = 30.dp)
                         .clip(shape = RoundedCornerShape(4.5.dp))
-                        .background(color = currentTheme.buttonColor))
+                        .background(color = settingsManager.settings.currentTheme.buttonColor))
                 Text(
                     text = "Створити збірку",
                     color = Color.White,
@@ -212,7 +222,7 @@ fun bottomColumn(){
                 )
                 Icon(
                     imageVector = Icons.Filled.AddCircle,
-                    tint = currentTheme.buttonIconColor,
+                    tint = settingsManager.settings.currentTheme.buttonIconColor,
                     contentDescription = "",
                     modifier = Modifier
                         .align(alignment = Alignment.CenterStart)

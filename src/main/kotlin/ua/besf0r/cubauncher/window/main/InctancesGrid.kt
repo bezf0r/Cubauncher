@@ -16,24 +16,29 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import kotlinx.coroutines.delay
-import ua.besf0r.cubauncher.currentTheme
+import io.kamel.image.KamelImage
+import io.kamel.image.asyncPainterResource
+import kotlinx.coroutines.*
+import org.jetbrains.skiko.MainUIDispatcher
 import ua.besf0r.cubauncher.instance.Instance
 import ua.besf0r.cubauncher.instanceManager
-import kotlin.time.Duration
+import ua.besf0r.cubauncher.settingsManager
 
 @Composable
-fun instancesGrid(
-    onSelectInstance: (instance: String) -> Unit
-) {
+fun instancesGrid() {
     var instances by remember { mutableStateOf(emptyList<Instance>()) }
 
     LaunchedEffect(Unit) {
-        while (true) {
-            instanceManager.instances.clear()
-            instanceManager.loadInstances()
-            instances = instanceManager.instances.toList()
-            delay(5000)
+        CoroutineScope(Dispatchers.IO).launch {
+            while (true) {
+                instanceManager.instances.clear()
+                instanceManager.loadInstances()
+
+                withContext(MainUIDispatcher) {
+                    instances = instanceManager.instances.toList()
+                }
+                delay(5000)
+            }
         }
     }
 
@@ -43,70 +48,88 @@ fun instancesGrid(
         LazyVerticalGrid(
             columns = GridCells.Fixed(2),
             modifier = Modifier
-                .offset(220.dp,44.dp)
+                .offset(220.dp, 44.dp)
                 .requiredWidth(width = 464.dp)
                 .requiredHeight(height = 347.dp),
             horizontalArrangement = Arrangement.spacedBy(20.dp),
             verticalArrangement = Arrangement.spacedBy(7.dp),
-            content = {
-                items(instances.map { it.name }) {
-                    TextButton(
-                        onClick = {
-                            selectedInstance.value = it
-                            onSelectInstance(it)
-                        },
-                        modifier = Modifier
-                            .align(alignment = Alignment.TopStart)
-                            .offset(x = 12.dp, y = 12.5.dp)
-                            .requiredWidth(width = 210.dp)
-                            .requiredHeight(height = 55.dp)
-                    ) {
-                        Box(
-                            modifier = Modifier
-                                .requiredWidth(width = 210.dp)
-                                .requiredHeight(height = 55.dp)
-                        ) {
-                            Box(
-                                modifier = Modifier
-                                    .align(alignment = Alignment.TopStart)
-                                    .offset(x = 60.dp)
-                                    .requiredWidth(width = 150.dp)
-                                    .requiredHeight(height = 55.dp)
-                                    .clip(shape = RoundedCornerShape(3.5.dp))
-                                    .background(color = if (selectedInstance.value == it)
-                                        currentTheme.selectedButtonColor
-                                    else Color(0xff464646))
-                            )
-                            Box(
-                                modifier = Modifier
-                                    .requiredWidth(width = 59.dp)
-                                    .requiredHeight(height = 55.dp)
-                                    .background(color = if (selectedInstance.value == it)
-                                        currentTheme.selectedButtonColor
-                                    else Color(0xff464646))
-                            )
-                            Text(
-                                text = it,
-                                color = currentTheme.textColor,
-                                style = TextStyle(fontSize = 12.sp),
-                                modifier = Modifier
-                                    .align(alignment = Alignment.TopStart)
-                                    .offset(x = 65.5.dp, y = 7.5.dp)
-                                    .requiredWidth(width = 138.dp)
-                                    .requiredHeight(height = 40.dp)
-                            )
-//                    Image(
-//                        painter = painterResource(id = imageBlockOfGoldNew),
-//                        contentDescription = null,
-//                        modifier = Modifier
-//                            .align(alignment = Alignment.TopStart)
-//                            .offset(x = 6.5.dp,
-//                                y = 5.dp)
-//                            .requiredSize(size = 45.dp))
-                        }
-                    }
-                }
+        ){
+            items(instances.map { it.name }) {
+                instanceGrid(selectedInstance, it)
             }
-        )
+        }
+    }
+}
+
+@Composable
+private fun instanceGrid(
+    selectedInstance: MutableState<String?>,
+    it: String
+) {
+    Box(
+        Modifier
+        .requiredWidth(width = 210.dp)
+        .requiredHeight(height = 55.dp)
+    ) {
+        TextButton(
+            onClick = {
+                selectedInstance.value = it
+
+                settingsManager.settings.selectedInstance = selectedInstance.value
+            },
+            modifier = Modifier
+                .align(alignment = Alignment.TopStart)
+                .offset(x = 12.dp, y = 12.5.dp)
+                .requiredWidth(width = 210.dp)
+                .requiredHeight(height = 55.dp)
+        ) {
+            Box(
+                modifier = Modifier
+                    .requiredWidth(width = 210.dp)
+                    .requiredHeight(height = 55.dp)
+            ) {
+                Box(
+                    modifier = Modifier
+                        .align(alignment = Alignment.TopStart)
+                        .offset(x = 60.dp)
+                        .requiredWidth(width = 150.dp)
+                        .requiredHeight(height = 55.dp)
+                        .clip(shape = RoundedCornerShape(3.5.dp))
+                        .background(
+                            color = if (selectedInstance.value == it)
+                                settingsManager.settings.currentTheme.selectedButtonColor
+                            else Color(0xff464646)
+                        )
+                )
+                Box(
+                    modifier = Modifier
+                        .requiredWidth(width = 59.dp)
+                        .requiredHeight(height = 55.dp)
+                        .background(
+                            color = if (selectedInstance.value == it)
+                                settingsManager.settings.currentTheme.selectedButtonColor
+                            else Color(0xff464646)
+                        )
+                ) {
+                    KamelImage(
+                        asyncPainterResource("https://cdn.apexminecrafthosting.com/img/uploads/2021/12/06173101/crafting-table.png"),
+                        contentDescription = "",
+                        modifier = Modifier
+                            .align(alignment = Alignment.Center)
+                            .requiredSize(size = 45.dp)
+                    )
+                }
+                Text(
+                    text = it,
+                    color = settingsManager.settings.currentTheme.textColor,
+                    style = TextStyle(fontSize = 12.sp),
+                    modifier = Modifier
+                        .align(alignment = Alignment.TopStart)
+                        .offset(x = 65.5.dp, y = 7.5.dp)
+                        .requiredWidth(width = 138.dp)
+                        .requiredHeight(height = 40.dp)
+                )
+            }
+        }
     }
 }

@@ -5,7 +5,7 @@ import java.io.IOException
 import java.util.*
 
 abstract class Account {
-    lateinit var username: String
+    open lateinit var username: String
     lateinit var uuid: UUID
     lateinit var accessToken: String
     var isSelected: Boolean = false

@@ -11,8 +11,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import ua.besf0r.cubauncher.currentTheme
 import ua.besf0r.cubauncher.minecraft.version.VersionManifest
+import ua.besf0r.cubauncher.settingsManager
 
 @Composable
 fun changeNameSector(
@@ -29,11 +29,11 @@ fun changeNameSector(
             modifier = Modifier
                 .requiredWidth(width = 605.dp)
                 .requiredHeight(height = 100.dp)
-                .background(color = currentTheme.panelsColor)
+                .background(color = settingsManager.settings!!.currentTheme.panelsColor)
         )
         Text(
             text = "Назва збірки:",
-            color = currentTheme.textColor,
+            color = settingsManager.settings!!.currentTheme.textColor,
             style = TextStyle(fontSize = 16.sp),
             modifier = Modifier
                 .align(alignment = Alignment.TopStart)
@@ -46,12 +46,12 @@ fun changeNameSector(
             onValueChange = { if (it.length <= maxLength) instanceName.value = it },
             label = {},
             colors = TextFieldDefaults.outlinedTextFieldColors(
-                focusedBorderColor = currentTheme.focusedBorderColor,
-                unfocusedBorderColor = currentTheme.unfocusedBorderColor,
-                textColor = currentTheme.textColor,
-                disabledTextColor = currentTheme.textColor,
-                focusedLabelColor = currentTheme.textColor,
-                unfocusedLabelColor = currentTheme.textColor
+                focusedBorderColor = settingsManager.settings!!.currentTheme.focusedBorderColor,
+                unfocusedBorderColor = settingsManager.settings!!.currentTheme.unfocusedBorderColor,
+                textColor = settingsManager.settings!!.currentTheme.textColor,
+                disabledTextColor = settingsManager.settings!!.currentTheme.textColor,
+                focusedLabelColor = settingsManager.settings!!.currentTheme.textColor,
+                unfocusedLabelColor = settingsManager.settings!!.currentTheme.textColor
             ),
             textStyle = TextStyle(fontSize = 15.sp),
             modifier = Modifier
@@ -78,7 +78,7 @@ fun iconButton() {
             Box(
                 modifier = Modifier
                     .requiredSize(size = 100.dp)
-                    .background(color = currentTheme.panelsColor)
+                    .background(color = settingsManager.settings!!.currentTheme.panelsColor)
             )
             //                    Image(
             //                        painter = painterResource(id = R.drawable.minecrafticon2048x20483ifq7gy71),

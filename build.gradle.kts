@@ -1,7 +1,7 @@
 import org.jetbrains.compose.desktop.application.dsl.TargetFormat
 
 plugins {
-    kotlin("jvm") version "1.9.10"
+    kotlin("jvm") version "1.9.22"
     id("org.jetbrains.compose") version "1.6.2"
     kotlin("plugin.serialization") version "1.9.10"
 }
@@ -24,9 +24,12 @@ dependencies {
 
     implementation("io.ktor:ktor-client-core:2.3.9")
     implementation("io.ktor:ktor-client-cio:2.3.9")
+    implementation("media.kamel:kamel-image:0.9.4")
+
     implementation("org.apache.commons:commons-text:1.11.0")
     implementation("net.java.dev.jna:jna-platform:4.0.0")
 
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.6.0")
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0")
 }
 

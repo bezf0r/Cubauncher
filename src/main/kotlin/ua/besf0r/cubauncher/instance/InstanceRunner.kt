@@ -6,7 +6,7 @@ import org.apache.commons.text.StringSubstitutor
 import ua.besf0r.cubauncher.*
 import ua.besf0r.cubauncher.account.Account
 import ua.besf0r.cubauncher.minecraft.*
-import ua.besf0r.cubauncher.util.OsEnum
+import ua.besf0r.cubauncher.minecraft.os.OperatingSystem
 import java.io.*
 import java.nio.charset.StandardCharsets
 import java.nio.file.Path
@@ -29,7 +29,7 @@ class InstanceRunner(
             val exitCode = runGameProcess(arguments)
             println("Minecraft process finished with exit code $exitCode")
 
-            instanceManager.save(instance)
+            instanceManager.update(instance)
         }
     }
 
@@ -67,7 +67,7 @@ class InstanceRunner(
         val assetsDir: Path = assetsDir
         val arguments = mutableListOf<String>()
 
-        arguments.add(OsEnum.javaType)
+        arguments.add(OperatingSystem.javaType)
 
         val classpath = generateClassPath()
 
@@ -94,20 +94,8 @@ class InstanceRunner(
 
         val substitutor = StringSubstitutor(args)
 
-        var minimumMemory = instance.minimumMemory
-        var maximumMemory = instance.maximumMemory
-
-        if (minimumMemory < 512) { minimumMemory = 512 }
-
-        if (maximumMemory <= 0) { maximumMemory = 2048 }
-
-        if (minimumMemory > maximumMemory) { maximumMemory = minimumMemory }
-
-        instance.minimumMemory = minimumMemory
-        instance.maximumMemory = maximumMemory
-
-        arguments.add("-Xms" + minimumMemory + "m")
-        arguments.add("-Xmx" + maximumMemory + "m")
+        arguments.add("-Xms" + settingsManager.settings!!.minimumRam + "m")
+        arguments.add("-Xmx" + settingsManager.settings!!.maximumRam + "m")
 
         arguments.add(substitutor.replace("-Djava.library.path=\${natives_directory}"))
         arguments.add("-DlibraryDirectory=${nativesDir.pathString}")
@@ -143,17 +131,13 @@ class InstanceRunner(
     }
 
     private fun runGameProcess(command: List<String>): Int {
-        val process = ProcessBuilder(command)
-            .inheritIO()
-            .start()
-        println(command.joinToString(" "))
+        val process = ProcessBuilder(command).start()
 
-        val inputStream: InputStream = process.inputStream
-
-        val reader = BufferedReader(InputStreamReader(inputStream, StandardCharsets.UTF_8))
-        var line: String
-        while (reader.readLine().also { line = it } != null) {
-            println(line)
+        BufferedReader(InputStreamReader(process.inputStream, StandardCharsets.UTF_8)).use { reader ->
+            var line: String?
+            while ((reader.readLine().also { line = it }) != null) {
+                println(line)
+            }
         }
 
         return process.waitFor()

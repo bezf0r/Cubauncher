@@ -12,11 +12,13 @@ import kotlinx.serialization.encoding.Encoder
 import kotlinx.serialization.json.*
 import ua.besf0r.cubauncher.httpClient
 import ua.besf0r.cubauncher.instance.Instance
+import ua.besf0r.cubauncher.instanceManager
 import ua.besf0r.cubauncher.librariesDir
 import ua.besf0r.cubauncher.network.DownloadListener
 import ua.besf0r.cubauncher.network.DownloadManager
-import ua.besf0r.cubauncher.util.FileUtil
-import ua.besf0r.cubauncher.util.OsEnum
+import ua.besf0r.cubauncher.network.file.FilesManager
+import ua.besf0r.cubauncher.minecraft.os.OperatingSystem
+import ua.besf0r.cubauncher.network.file.FilesManager.createFileIfNotExists
 import ua.besf0r.cubauncher.workDir
 import java.io.*
 import java.io.IOException
@@ -27,45 +29,6 @@ import kotlin.io.path.deleteIfExists
 
 
 class ForgeDownloader {
-    @Serializable(ForgeDeserializer::class)
-    data class VersionManifest(val versions: List<Pair<String, List<String>>>)
-
-    object ForgeDeserializer : KSerializer<VersionManifest> {
-        private fun convertEntries(set: Set<Map.Entry<String, JsonElement>>): List<Pair<String, List<String>>> {
-            return set.map { entry ->
-                entry.key to entry.value.jsonArray.map { it.jsonPrimitive.content }
-            }
-        }
-        override val descriptor = buildClassSerialDescriptor("VersionManifest")
-
-        override fun deserialize(decoder: Decoder): VersionManifest {
-            val jsonDecoder = decoder as JsonDecoder
-            val element = jsonDecoder.decodeJsonElement()
-            return VersionManifest(convertEntries(element.jsonObject.entries))
-        }
-
-        override fun serialize(encoder: Encoder, value: VersionManifest) {}
-    }
-
-    companion object {
-        private const val manifestUrl = "https://files.minecraftforge.net/net/minecraftforge/forge/maven-metadata.json"
-
-        private val requiredVersions = listOf(
-            "1.12.2", "1.13.2", "1.14.2", "1.14.3", "1.14.4", "1.15",
-            "1.15.1", "1.15.2", "1.16.1", "1.16.2", "1.16.3", "1.16.4", "1.16.5", "1.17.1", "1.18",
-            "1.18.1", "1.18.2", "1.19", "1.19.1", "1.19.2", "1.19.3", "1.19.4", "1.20", "1.20.1",
-            "1.20.2", "1.20.3", "1.20.4", "1.20.6"
-        )
-
-        val versions: VersionManifest = runBlocking {
-            withContext(Dispatchers.IO) {
-                Json.decodeFromString<VersionManifest>(httpClient.get(manifestUrl).bodyAsText())
-            }
-        }.run {
-            VersionManifest(versions.filter { its -> its.first in requiredVersions })
-        }
-    }
-
     private val json = Json { ignoreUnknownKeys = true }
 
     @Throws(IOException::class)
@@ -112,11 +75,11 @@ class ForgeDownloader {
         }
 
         val profiles = workDir.resolve("launcher_profiles.json")
-        FileUtil.createFileIfNotExists(profiles)
+        profiles.createFileIfNotExists()
 
         val process = ProcessBuilder(
             listOf(
-                OsEnum.javaType,
+                OperatingSystem.javaType,
                 "-jar",
                 installerPath.toFile().name,
                 "--installClient"
@@ -130,6 +93,9 @@ class ForgeDownloader {
             }
         }
         process.waitFor()
+
+        val mods = instanceManager.getMinecraftDir(instance).resolve("mods")
+        FilesManager.createDirectoryIfNotExists(mods)
 
         profiles.deleteIfExists()
         installerLog.deleteIfExists()

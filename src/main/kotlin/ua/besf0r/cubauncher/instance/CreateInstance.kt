@@ -2,7 +2,7 @@ package ua.besf0r.cubauncher.instance
 
 import ua.besf0r.cubauncher.instanceManager
 
-class CreateInstanceFiles(
+class CreateInstance(
     private val name: String?,
     private val version: String?
 ) {
