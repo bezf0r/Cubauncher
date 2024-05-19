@@ -19,9 +19,7 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.window.DialogWindow
 import androidx.compose.ui.window.Window
-import androidx.compose.ui.window.rememberDialogState
 import androidx.compose.ui.window.rememberWindowState
 import io.kamel.image.KamelImage
 import io.kamel.image.asyncPainterResource
@@ -177,7 +175,7 @@ fun settingWindow(currentLog: MutableState<String>, onDismiss: () -> Unit) {
                             .align(alignment = Alignment.CenterStart)
                             .offset(x = 38.dp)
                             .requiredSize(size = 20.dp),
-                        tint = settingsManager.settings!!.currentTheme.textColor
+                        tint = settingsManager.settings.currentTheme.textColor
                     )
                 }
             }

@@ -10,29 +10,24 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.window.ApplicationScope
 import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.application
 import androidx.compose.ui.window.rememberWindowState
 import io.ktor.client.*
 import io.ktor.client.engine.cio.*
 import io.ktor.client.plugins.*
-import io.ktor.events.*
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.withContext
+import kotlinx.coroutines.*
 import ua.besf0r.cubauncher.laucnher.logger.LoggerManager.runLogger
 import ua.besf0r.cubauncher.account.AccountsManager
+import ua.besf0r.cubauncher.account.microsoft.MicrosoftOAuthUtils
 import ua.besf0r.cubauncher.instance.InstanceManager
 import ua.besf0r.cubauncher.laucnher.SettingsManager
 import ua.besf0r.cubauncher.minecraft.version.VersionList
 import ua.besf0r.cubauncher.network.file.FilesManager
-import ua.besf0r.cubauncher.network.file.FilesManager.createFileIfNotExists
 import ua.besf0r.cubauncher.window.createMainTitleBar
 import ua.besf0r.cubauncher.window.main.bottomColumn
 import ua.besf0r.cubauncher.window.main.instancesGrid
 import ua.besf0r.cubauncher.window.main.leftColumn
-import ua.besf0r.cubauncher.window.theme.UiTheme
 import java.nio.file.FileSystems
 
 @Composable
@@ -67,14 +62,24 @@ val accountsManager = AccountsManager(workDir)
 val instanceManager = InstanceManager(instancesDir)
 val settingsManager = SettingsManager(settingsFile)
 
-var applicationScope: ApplicationScope? = null
-
 fun main() = application {
-    applicationScope = this
+    MicrosoftOAuthUtils.obtainDeviceCodeAsync(
+        deviceCodeCallback = {
+            println("Перейдіть за посиланням ${it.verificationUri} та введіть код: ${it.userCode}")
+        },
+        errorCallback = {},
+        successCallback = {
+            println("Авторизація успішна!")
+
+            MicrosoftOAuthUtils.loginToMicrosoftAccount(it) {
+                println("Успішний вхід для користувача: ${it.username}")
+            }
+        }
+    )
 
     runBlocking {
         withContext(Dispatchers.IO) {
-            FilesManager.createDirectories(workDir, assetsDir, librariesDir, instancesDir, versionsDir)
+            FilesManager.createDirectories(workDir, assetsDir, librariesDir, versionsDir)
             VersionList.download()
         }
     }
@@ -92,8 +97,13 @@ fun main() = application {
         onCloseRequest = { settingsManager.update() }
     ) {
         App(currentLog)
-        createMainTitleBar(windowState)
+
+        createMainTitleBar(windowState){
+            exitApplication()
+            settingsManager.update()
+        }
     }
 }
+
 
 

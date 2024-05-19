@@ -29,20 +29,20 @@ fun instancesGrid() {
     var instances by remember { mutableStateOf(emptyList<Instance>()) }
 
     LaunchedEffect(Unit) {
-        CoroutineScope(Dispatchers.IO).launch {
-            while (true) {
+        while (true) {
+            withContext(MainUIDispatcher) {
                 instanceManager.instances.clear()
                 instanceManager.loadInstances()
 
-                withContext(MainUIDispatcher) {
-                    instances = instanceManager.instances.toList()
-                }
-                delay(5000)
+                instances = instanceManager.instances.toList()
             }
+            delay(5000)
         }
     }
 
-    val selectedInstance = remember { mutableStateOf<String?>(null) }
+    val selectedInstance = remember { mutableStateOf(
+        settingsManager.settings.selectedInstance
+    ) }
 
     Box(modifier = Modifier.fillMaxSize()) {
         LazyVerticalGrid(

@@ -24,8 +24,7 @@ class SettingsManager(
         }
     }
     fun update() {
-        if (!settingsFile.exists()) return
-        IOUtil.writeUtf8String(settingsFile,
-            Json.encodeToString<LauncherSettings>(settings))
+        val settingsAsString = Json.encodeToString<LauncherSettings>(settings)
+        IOUtil.writeUtf8String(settingsFile, settingsAsString)
     }
 }

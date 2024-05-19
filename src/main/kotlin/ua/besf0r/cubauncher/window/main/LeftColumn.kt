@@ -179,11 +179,10 @@ fun leftColumn() {
 
         TextButton(
             onClick = {
-                val directory = if (settingsManager.settings.selectedInstance == null){
-                    workDir
-                }else{
-                    instanceManager.getMinecraftDir(instanceManager.
-                    getInstanceByName(settingsManager.settings.selectedInstance!!)?: return@TextButton)
+                val currentInstance = settingsManager.settings.selectedInstance
+
+                val directory = if (currentInstance == null) workDir else{
+                    instanceManager.getMinecraftDir(currentInstance)
                 }
 
                 val desktop = Desktop.getDesktop()

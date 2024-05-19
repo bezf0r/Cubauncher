@@ -10,9 +10,8 @@ import ua.besf0r.cubauncher.instanceManager
 import ua.besf0r.cubauncher.minecraft.version.*
 import ua.besf0r.cubauncher.network.DownloadListener
 import ua.besf0r.cubauncher.network.DownloadManager
-import ua.besf0r.cubauncher.network.file.FilesManager
 import ua.besf0r.cubauncher.network.file.IOUtil
-import ua.besf0r.cubauncher.minecraft.os.OperatingSystem
+import ua.besf0r.cubauncher.network.file.FilesManager.createDirectoryIfNotExists
 import java.io.IOException
 import java.nio.file.Path
 
@@ -32,7 +31,7 @@ class MinecraftDownloader(
         currentJob.async {
             currentInstance = instance
 
-            FilesManager.createDirectoryIfNotExists(versionsDir.resolve(instance.minecraftVersion))
+            versionsDir.resolve(instance.minecraftVersion).createDirectoryIfNotExists()
 
             val manifestRead = IOUtil.readUtf8String(
                 versionsDir.resolve("version_manifest_v2.json")
@@ -125,7 +124,7 @@ class MinecraftDownloader(
         minecraftDownloadListener.onStageChanged("Завантаження індексу...")
 
         val indexesFolder = assetsDir.resolve("indexes")
-        FilesManager.createDirectoryIfNotExists(indexesFolder)
+        indexesFolder.createDirectoryIfNotExists()
 
         val assetIndex = currentInstance!!.versionInfo?.assetIndex ?: return
 
@@ -152,7 +151,7 @@ class MinecraftDownloader(
         )
 
         val assetsDownloadFolder = assetsDir.resolve("objects")
-        FilesManager.createDirectoryIfNotExists(assetsDownloadFolder)
+        assetsDownloadFolder.createDirectoryIfNotExists()
 
         val objects = index.objects
 

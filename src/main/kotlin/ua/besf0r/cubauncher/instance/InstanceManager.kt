@@ -2,9 +2,11 @@ package ua.besf0r.cubauncher.instance
 
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
+import ua.besf0r.cubauncher.instancesDir
 import ua.besf0r.cubauncher.network.file.FilesManager
 import ua.besf0r.cubauncher.network.file.IOUtil
-import ua.besf0r.cubauncher.minecraft.os.OperatingSystem
+import ua.besf0r.cubauncher.minecraft.OperatingSystem
+import ua.besf0r.cubauncher.network.file.FilesManager.createDirectoryIfNotExists
 import ua.besf0r.cubauncher.network.file.FilesManager.createFileIfNotExists
 import java.io.File
 import java.io.IOException
@@ -20,6 +22,14 @@ class InstanceManager(
 
     private val minecraftDirName: String = if (OperatingSystem.oS == OperatingSystem.MACOS)
         "minecraft" else ".minecraft"
+
+    init {
+        try {
+            instancesDir.createDirectoryIfNotExists()
+        } catch (e: IOException) {
+            throw RuntimeException(e)
+        }
+    }
 
     @Throws(IOException::class)
     fun loadInstances() {
@@ -63,11 +73,13 @@ class InstanceManager(
 
         instance.name = instance.name
         createDirName(instance)
-        val instanceDir = getInstanceDir(instance)
 
-        FilesManager.createDirectoryIfNotExists(instanceDir)
+        val instanceDir = getInstanceDir(instance)
+        instancesDir.createDirectoryIfNotExists()
+
         val minecraftDir = instanceDir.resolve(minecraftDirName)
-        FilesManager.createDirectoryIfNotExists(minecraftDir)
+        minecraftDir.createDirectoryIfNotExists()
+
         val instanceFile = instanceDir.resolve("instance.json")
         instanceDir.createFileIfNotExists()
 
@@ -94,8 +106,14 @@ class InstanceManager(
         return workDir.resolve(instance.name).resolve(".minecraft")
     }
 
+    fun getMinecraftDir(instance: String): Path {
+        return workDir.resolve(instance).resolve(".minecraft")
+    }
+
+
     fun getInstanceByName(name: String): Instance? {
         return instances.find { it.name == name }
     }
+
 }
 

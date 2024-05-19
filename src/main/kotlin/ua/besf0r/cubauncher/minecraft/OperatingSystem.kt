@@ -1,4 +1,4 @@
-package ua.besf0r.cubauncher.minecraft.os
+package ua.besf0r.cubauncher.minecraft
 
 import com.sun.jna.Platform
 import kotlinx.serialization.SerialName

@@ -4,20 +4,13 @@ import io.ktor.client.request.*
 import io.ktor.client.statement.*
 import io.ktor.utils.io.errors.*
 import kotlinx.coroutines.*
-import kotlinx.serialization.KSerializer
-import kotlinx.serialization.Serializable
-import kotlinx.serialization.descriptors.buildClassSerialDescriptor
-import kotlinx.serialization.encoding.Decoder
-import kotlinx.serialization.encoding.Encoder
 import kotlinx.serialization.json.*
-import ua.besf0r.cubauncher.httpClient
 import ua.besf0r.cubauncher.instance.Instance
 import ua.besf0r.cubauncher.instanceManager
 import ua.besf0r.cubauncher.librariesDir
 import ua.besf0r.cubauncher.network.DownloadListener
 import ua.besf0r.cubauncher.network.DownloadManager
-import ua.besf0r.cubauncher.network.file.FilesManager
-import ua.besf0r.cubauncher.minecraft.os.OperatingSystem
+import ua.besf0r.cubauncher.minecraft.OperatingSystem
 import ua.besf0r.cubauncher.network.file.FilesManager.createFileIfNotExists
 import ua.besf0r.cubauncher.workDir
 import java.io.*
@@ -95,7 +88,7 @@ class ForgeDownloader {
         process.waitFor()
 
         val mods = instanceManager.getMinecraftDir(instance).resolve("mods")
-        FilesManager.createDirectoryIfNotExists(mods)
+        mods.createFileIfNotExists()
 
         profiles.deleteIfExists()
         installerLog.deleteIfExists()

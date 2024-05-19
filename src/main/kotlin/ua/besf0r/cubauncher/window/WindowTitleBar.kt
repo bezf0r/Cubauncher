@@ -13,16 +13,14 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.window.DialogWindowScope
 import androidx.compose.ui.window.FrameWindowScope
 import androidx.compose.ui.window.WindowState
-import ua.besf0r.cubauncher.applicationScope
 
 @Composable
 fun windowTitleBar(
     canBeHided : Boolean = true,
     visible: () -> Unit = {},
-    close: (() -> Unit)? = null
+    close: (() -> Unit)
 ) {
     Box(
         modifier = Modifier
@@ -32,7 +30,7 @@ fun windowTitleBar(
     ) {
         TextButton(
             onClick = {
-                if (close != null) close() else applicationScope!!.exitApplication()
+                close()
             },
             colors = ButtonDefaults.buttonColors(backgroundColor = Color(0xffd9d9d9)),
             modifier = Modifier
@@ -89,7 +87,7 @@ fun windowTitleBar(
 }
 @Composable
 fun FrameWindowScope.createMainTitleBar(
-    windowState: WindowState, onDismissed: () -> Unit = {}) {
+    windowState: WindowState, onDismissed: (() -> Unit)) {
     this.WindowDraggableArea {
         windowTitleBar(
             visible = {

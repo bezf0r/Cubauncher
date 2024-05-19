@@ -6,7 +6,7 @@ import org.apache.commons.text.StringSubstitutor
 import ua.besf0r.cubauncher.*
 import ua.besf0r.cubauncher.account.Account
 import ua.besf0r.cubauncher.minecraft.*
-import ua.besf0r.cubauncher.minecraft.os.OperatingSystem
+import ua.besf0r.cubauncher.minecraft.OperatingSystem
 import java.io.*
 import java.nio.charset.StandardCharsets
 import java.nio.file.Path
@@ -21,7 +21,6 @@ class InstanceRunner(
     @Composable
     fun run() {
         GlobalScope.launch(Dispatchers.IO) {
-            account.authenticate()
             val instanceManager = instanceManager
 
             val arguments = getArguments(librariesDir)

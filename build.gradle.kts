@@ -24,6 +24,7 @@ dependencies {
 
     implementation("io.ktor:ktor-client-core:2.3.9")
     implementation("io.ktor:ktor-client-cio:2.3.9")
+    implementation("io.ktor:ktor-client-content-negotiation:2.3.9")
     implementation("media.kamel:kamel-image:0.9.4")
 
     implementation("org.apache.commons:commons-text:1.11.0")

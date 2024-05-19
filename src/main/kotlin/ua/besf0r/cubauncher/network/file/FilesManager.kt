@@ -27,8 +27,8 @@ object FilesManager {
     }
 
     @Throws(IOException::class)
-    fun createDirectoryIfNotExists(path: Path) {
-        if (!Files.exists(path)) Files.createDirectories(path)
+    fun Path.createDirectoryIfNotExists() {
+        if (!Files.exists(this)) Files.createDirectories(this)
     }
 
     @Throws(IOException::class)
@@ -41,7 +41,7 @@ object FilesManager {
     fun createDirectories(vararg directories: Path) {
         directories.forEach {
             try {
-                createDirectoryIfNotExists(it)
+                it.createDirectoryIfNotExists()
             } catch (e: IOException) {
                 println("Unable to create launcher directories")
             }
