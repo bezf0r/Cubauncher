@@ -1,12 +1,8 @@
 package ua.besf0r.cubauncher.minecraft.forge.version
 
-import io.ktor.client.*
-import io.ktor.client.engine.cio.*
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.withContext
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.descriptors.buildClassSerialDescriptor
@@ -49,7 +45,9 @@ object ForgeVersionManifest {
         runBlocking {
             val response = httpClient.get(manifestUrl).bodyAsText()
             val decodedManifest = Json.decodeFromString<VersionManifest>(response)
-            VersionManifest(decodedManifest.versions.filter { it.first in requiredVersions })
+            VersionManifest(decodedManifest.versions.filter {
+                it.first in requiredVersions
+            })
         }
     } catch (e: Exception) {
         println("Помилка при завантаженні версій forge: ${e.message}")

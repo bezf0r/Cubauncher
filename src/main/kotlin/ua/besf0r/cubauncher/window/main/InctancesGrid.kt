@@ -18,25 +18,25 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import io.kamel.image.KamelImage
 import io.kamel.image.asyncPainterResource
-import kotlinx.coroutines.*
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.withContext
 import org.jetbrains.skiko.MainUIDispatcher
 import ua.besf0r.cubauncher.instance.Instance
 import ua.besf0r.cubauncher.instanceManager
 import ua.besf0r.cubauncher.settingsManager
 
 @Composable
-fun instancesGrid() {
+fun InstancesGrid() {
     var instances by remember { mutableStateOf(emptyList<Instance>()) }
 
     LaunchedEffect(Unit) {
         while (true) {
+            instanceManager.instances.clear()
+            instanceManager.loadInstances()
             withContext(MainUIDispatcher) {
-                instanceManager.instances.clear()
-                instanceManager.loadInstances()
-
                 instances = instanceManager.instances.toList()
             }
-            delay(5000)
+            delay(100)
         }
     }
 
@@ -44,27 +44,25 @@ fun instancesGrid() {
         settingsManager.settings.selectedInstance
     ) }
 
-    Box(modifier = Modifier.fillMaxSize()) {
-        LazyVerticalGrid(
-            columns = GridCells.Fixed(2),
-            modifier = Modifier
-                .offset(220.dp, 44.dp)
-                .requiredWidth(width = 464.dp)
-                .requiredHeight(height = 347.dp),
-            horizontalArrangement = Arrangement.spacedBy(20.dp),
-            verticalArrangement = Arrangement.spacedBy(7.dp),
-        ){
-            items(instances.map { it.name }) {
-                instanceGrid(selectedInstance, it)
-            }
+    LazyVerticalGrid(
+        columns = GridCells.Fixed(2),
+        modifier = Modifier
+            .offset(220.dp, 44.dp)
+            .requiredWidth(width = 464.dp)
+            .requiredHeight(height = 347.dp),
+        horizontalArrangement = Arrangement.spacedBy(20.dp),
+        verticalArrangement = Arrangement.spacedBy(7.dp),
+    ) {
+        items(instances.map { it.name }) {instance ->
+            InstanceGrid(selectedInstance, instance)
         }
     }
 }
 
 @Composable
-private fun instanceGrid(
+private fun InstanceGrid(
     selectedInstance: MutableState<String?>,
-    it: String
+    instance: String,
 ) {
     Box(
         Modifier
@@ -73,8 +71,7 @@ private fun instanceGrid(
     ) {
         TextButton(
             onClick = {
-                selectedInstance.value = it
-
+                selectedInstance.value = instance
                 settingsManager.settings.selectedInstance = selectedInstance.value
             },
             modifier = Modifier
@@ -96,7 +93,7 @@ private fun instanceGrid(
                         .requiredHeight(height = 55.dp)
                         .clip(shape = RoundedCornerShape(3.5.dp))
                         .background(
-                            color = if (selectedInstance.value == it)
+                            color = if (selectedInstance.value == instance)
                                 settingsManager.settings.currentTheme.selectedButtonColor
                             else Color(0xff464646)
                         )
@@ -106,7 +103,7 @@ private fun instanceGrid(
                         .requiredWidth(width = 59.dp)
                         .requiredHeight(height = 55.dp)
                         .background(
-                            color = if (selectedInstance.value == it)
+                            color = if (selectedInstance.value == instance)
                                 settingsManager.settings.currentTheme.selectedButtonColor
                             else Color(0xff464646)
                         )
@@ -120,7 +117,7 @@ private fun instanceGrid(
                     )
                 }
                 Text(
-                    text = it,
+                    text = instance,
                     color = settingsManager.settings.currentTheme.textColor,
                     style = TextStyle(fontSize = 12.sp),
                     modifier = Modifier

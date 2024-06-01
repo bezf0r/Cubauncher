@@ -24,13 +24,16 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import ua.besf0r.cubauncher.minecraft.downloadFiles
-import ua.besf0r.cubauncher.minecraft.version.VersionManifest
 import ua.besf0r.cubauncher.settingsManager
-import ua.besf0r.cubauncher.window.instance.create.createNewInstanceWindow
-import ua.besf0r.cubauncher.window.settings.settingWindow
+import ua.besf0r.cubauncher.window.instance.create.CreateInstanceData
+import ua.besf0r.cubauncher.window.instance.create.CreateInstanceWindow
+import ua.besf0r.cubauncher.window.settings.SettingWindow
+import ua.besf0r.cubauncher.window.settings.SettingsSection
 
 @Composable
-fun bottomColumn(currentLog: MutableState<String>){
+fun BottomColumn(
+    currentLog: MutableState<String>
+){
     Box(
         modifier = Modifier
             .requiredWidth(width = 720.dp)
@@ -42,16 +45,122 @@ fun bottomColumn(currentLog: MutableState<String>){
                 .requiredWidth(width = 720.dp)
                 .requiredHeight(height = 85.dp)
                 .background(color = settingsManager.settings.currentTheme.panelsColor))
+
+        val onNewInstance = remember { mutableStateOf(false) }
         TextButton(
-            onClick = { },
+            onClick = { onNewInstance.value = true },
             colors = ButtonDefaults.buttonColors(backgroundColor = Color.Transparent),
             modifier = Modifier
                 .align(alignment = Alignment.TopStart)
-                .offset(x = 562.dp,
-                    y = 30.dp)
+                .offset(x = 46.dp, y = 32.dp)
+                .requiredWidth(width = 176.dp)
+                .requiredHeight(height = 30.dp)
+        ) {
+            if (onNewInstance.value) CreateInstanceWindow(
+                onDismissed = {
+                    onNewInstance.value = false
+                }, onDownload = { screenData: MutableState<CreateInstanceData> ->
+                    downloadFiles(screenData, onNewInstance)
+                }
+            )
+            Box(
+                modifier = Modifier
+                    .requiredWidth(width = 176.dp)
+                    .requiredHeight(height = 30.dp)
+            ) {
+                Box(
+                    modifier = Modifier
+                        .requiredWidth(width = 176.dp)
+                        .requiredHeight(height = 30.dp)
+                        .clip(shape = RoundedCornerShape(4.5.dp))
+                        .background(color = settingsManager.settings.currentTheme.buttonColor))
+                Text(
+                    text = "Створити збірку",
+                    color = Color.White,
+                    style = TextStyle(fontSize = 14.sp),
+                    modifier = Modifier
+                        .align(alignment = Alignment.Center)
+                        .offset(x = 4.dp)
+                        .requiredWidth(width = 114.dp)
+                        .requiredHeight(height = 20.dp)
+                )
+                Icon(
+                    imageVector = Icons.Filled.AddCircle,
+                    tint = settingsManager.settings.currentTheme.buttonIconColor,
+                    contentDescription = "",
+                    modifier = Modifier
+                        .align(alignment = Alignment.CenterStart)
+                        .offset(x = 12.dp)
+                        .requiredWidth(width = 17.dp)
+                        .requiredHeight(height = 17.dp))
+            }
+        }
+
+        val openSettingWindow = mutableStateOf(false)
+
+        TextButton(
+            onClick = { openSettingWindow.value = true },
+            colors = ButtonDefaults.buttonColors(backgroundColor = Color.Transparent),
+            modifier = Modifier
+                .align(alignment = Alignment.TopStart)
+                .offset(x = 231.dp, y = 31.dp)
+                .requiredWidth(width = 173.dp)
+                .requiredHeight(height = 30.dp)
+        ) {
+            if (openSettingWindow.value)
+                SettingWindow(currentLog) {
+                    openSettingWindow.value = false
+                }
+
+            Box(
+                modifier = Modifier
+                    .requiredWidth(width = 173.dp)
+                    .requiredHeight(height = 30.dp)
+            ) {
+                Box(
+                    modifier = Modifier
+                        .requiredWidth(width = 173.dp)
+                        .requiredHeight(height = 30.dp)
+                        .clip(shape = RoundedCornerShape(4.5.dp))
+                        .background(color = settingsManager.settings.currentTheme.buttonColor))
+                Text(
+                    text = "Налаштування",
+                    color = settingsManager.settings.currentTheme.textColor,
+                    style = TextStyle(
+                        fontSize = 14.sp),
+                    modifier = Modifier
+                        .align(alignment = Alignment.Center)
+                        .offset(x = 19.dp)
+                        .requiredWidth(width = 128.dp)
+                        .requiredHeight(height = 17.dp)
+                )
+                Icon(
+                    imageVector = Icons.Filled.Settings,
+                    tint = settingsManager.settings.currentTheme.buttonIconColor,
+                    contentDescription = "",
+                    modifier = Modifier
+                        .align(alignment = Alignment.CenterStart)
+                        .offset(x = 18.dp)
+                        .requiredSize(size = 18.dp))
+            }
+        }
+
+        val onAccountSettingWindow = mutableStateOf(false)
+
+        TextButton(
+            onClick = { onAccountSettingWindow.value = true },
+            colors = ButtonDefaults.buttonColors(backgroundColor = Color.Transparent),
+            modifier = Modifier
+                .align(alignment = Alignment.TopStart)
+                .offset(x = 562.dp, y = 30.dp)
                 .requiredWidth(width = 140.dp)
                 .requiredHeight(height = 30.dp)
         ) {
+            if (onAccountSettingWindow.value)
+                SettingWindow(currentLog, SettingsSection.ACCOUNT){
+                    onAccountSettingWindow.value = false
+                }
+
             Box(
                 modifier = Modifier
                     .requiredWidth(width = 140.dp)
@@ -83,6 +192,7 @@ fun bottomColumn(currentLog: MutableState<String>){
                         .requiredHeight(height = 15.dp))
             }
         }
+
         TextButton(
             onClick = { },
             colors = ButtonDefaults.buttonColors(backgroundColor = Color.Transparent),
@@ -123,112 +233,6 @@ fun bottomColumn(currentLog: MutableState<String>){
                         .offset(x = 20.dp)
                         .requiredWidth(width = 15.dp)
                         .requiredHeight(height = 15.dp))
-            }
-        }
-        val openSettingWindow = mutableStateOf(false)
-
-        TextButton(
-            onClick = {
-               openSettingWindow.value = true
-            },
-            colors = ButtonDefaults.buttonColors(backgroundColor = Color.Transparent),
-            modifier = Modifier
-                .align(alignment = Alignment.TopStart)
-                .offset(x = 231.dp,
-                    y = 31.dp)
-                .requiredWidth(width = 173.dp)
-                .requiredHeight(height = 30.dp)
-        ) {
-            if (openSettingWindow.value) settingWindow(currentLog){
-                openSettingWindow.value = false
-            }
-
-            Box(
-                modifier = Modifier
-                    .requiredWidth(width = 173.dp)
-                    .requiredHeight(height = 30.dp)
-            ) {
-                Box(
-                    modifier = Modifier
-                        .requiredWidth(width = 173.dp)
-                        .requiredHeight(height = 30.dp)
-                        .clip(shape = RoundedCornerShape(4.5.dp))
-                        .background(color = settingsManager.settings.currentTheme.buttonColor))
-                Text(
-                    text = "Налаштування",
-                    color = settingsManager.settings.currentTheme.textColor,
-                    style = TextStyle(
-                        fontSize = 14.sp),
-                    modifier = Modifier
-                        .align(alignment = Alignment.Center)
-                        .offset(x = 19.dp)
-                        .requiredWidth(width = 128.dp)
-                        .requiredHeight(height = 17.dp)
-                )
-                Icon(
-                    imageVector = Icons.Filled.Settings,
-                    tint = settingsManager.settings.currentTheme.buttonIconColor,
-                    contentDescription = "",
-                    modifier = Modifier
-                        .align(alignment = Alignment.CenterStart)
-                        .offset(x = 18.dp)
-                        .requiredSize(size = 18.dp))
-            }
-        }
-        val onNewInstance = remember { mutableStateOf(false) }
-        TextButton(
-            onClick = { onNewInstance.value = true },
-            colors = ButtonDefaults.buttonColors(backgroundColor = Color.Transparent),
-            modifier = Modifier
-                .align(alignment = Alignment.TopStart)
-                .offset(x = 46.dp, y = 32.dp)
-                .requiredWidth(width = 176.dp)
-                .requiredHeight(height = 30.dp)
-        ) {
-            if (onNewInstance.value) createNewInstanceWindow(
-                onDismissed = {
-                    onNewInstance.value = false
-                }, onDownload = {
-                    instanceName: MutableState<String?>,
-                    selectedVersion: MutableState<VersionManifest.Version?>,
-                    isForge: MutableState<Boolean>,
-                    modManagerVersion: MutableState<String>
-                    ->
-
-                    downloadFiles(instanceName, selectedVersion,
-                        isForge, modManagerVersion, onNewInstance)
-                }
-            )
-            Box(
-                modifier = Modifier
-                    .requiredWidth(width = 176.dp)
-                    .requiredHeight(height = 30.dp)
-            ) {
-                Box(
-                    modifier = Modifier
-                        .requiredWidth(width = 176.dp)
-                        .requiredHeight(height = 30.dp)
-                        .clip(shape = RoundedCornerShape(4.5.dp))
-                        .background(color = settingsManager.settings.currentTheme.buttonColor))
-                Text(
-                    text = "Створити збірку",
-                    color = Color.White,
-                    style = TextStyle(fontSize = 14.sp),
-                    modifier = Modifier
-                        .align(alignment = Alignment.Center)
-                        .offset(x = 4.dp)
-                        .requiredWidth(width = 114.dp)
-                        .requiredHeight(height = 20.dp)
-                )
-                Icon(
-                    imageVector = Icons.Filled.AddCircle,
-                    tint = settingsManager.settings.currentTheme.buttonIconColor,
-                    contentDescription = "",
-                    modifier = Modifier
-                        .align(alignment = Alignment.CenterStart)
-                        .offset(x = 12.dp)
-                        .requiredWidth(width = 17.dp)
-                        .requiredHeight(height = 17.dp))
             }
         }
     }

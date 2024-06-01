@@ -1,4 +1,4 @@
-package ua.besf0r.cubauncher.window.account
+package ua.besf0r.cubauncher.window.settings.account.skin
 
 import java.awt.image.BufferedImage
 

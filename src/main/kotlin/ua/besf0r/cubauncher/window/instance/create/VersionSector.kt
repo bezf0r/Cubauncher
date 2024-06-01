@@ -21,17 +21,17 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import ua.besf0r.cubauncher.minecraft.version.VersionManifest
 import ua.besf0r.cubauncher.settingsManager
-import ua.besf0r.cubauncher.window.circularCheckbox
+import ua.besf0r.cubauncher.window.component.CircularCheckbox
 import java.text.SimpleDateFormat
 
 @Composable
-fun changeVersionSector(
+fun ChangeVersionSector(
     manifest: VersionManifest.VersionManifest,
     versionType: String,
-    selectedVersion: MutableState<VersionManifest.Version?>,
-    isRelease: MutableState<Boolean>,
-    onVersionChange: (version: VersionManifest.Version) -> Unit,
+    screenData: MutableState<CreateInstanceData>
 ) {
+    val isRelease = screenData.value.isRelease
+
     Box(
         modifier = Modifier
             .requiredWidth(width = 710.dp)
@@ -42,7 +42,7 @@ fun changeVersionSector(
             modifier = Modifier
                 .requiredWidth(width = 710.dp)
                 .requiredHeight(height = 191.dp)
-                .background(color = settingsManager.settings!!.currentTheme.panelsColor)
+                .background(color = settingsManager.settings.currentTheme.panelsColor)
         )
         Box(
             modifier = Modifier
@@ -56,7 +56,7 @@ fun changeVersionSector(
                     .requiredWidth(width = 450.dp)
                     .requiredHeight(height = 181.dp)
                     .clip(shape = RoundedCornerShape(5.dp))
-                    .background(color = settingsManager.settings!!.currentTheme.fontColor)
+                    .background(color = settingsManager.settings.currentTheme.fontColor)
             )
             Box(
                 modifier = Modifier
@@ -65,11 +65,11 @@ fun changeVersionSector(
                     .requiredWidth(width = 440.dp)
                     .requiredHeight(height = 15.dp)
                     .clip(shape = RoundedCornerShape(5.dp))
-                    .background(color = settingsManager.settings!!.currentTheme.panelsColor)
+                    .background(color = settingsManager.settings.currentTheme.panelsColor)
             )
             Text(
                 text = "Дата виходу",
-                color = settingsManager.settings!!.currentTheme.textColor,
+                color = settingsManager.settings.currentTheme.textColor,
                 style = TextStyle(fontSize = 13.sp),
                 modifier = Modifier
                     .align(alignment = Alignment.TopStart)
@@ -79,7 +79,7 @@ fun changeVersionSector(
             )
             Text(
                 text = "Версія",
-                color = settingsManager.settings!!.currentTheme.textColor,
+                color = settingsManager.settings.currentTheme.textColor,
                 style = TextStyle(fontSize = 13.sp),
                 modifier = Modifier
                     .align(alignment = Alignment.TopStart)
@@ -95,50 +95,7 @@ fun changeVersionSector(
                 verticalArrangement = Arrangement.spacedBy(6.dp),
                 content = {
                     items(versions) {
-                        TextButton(
-                            onClick = { onVersionChange(it) },
-                            colors = ButtonDefaults.buttonColors(
-                                backgroundColor =
-                                if (selectedVersion.value == it) settingsManager.settings!!.currentTheme.selectedButtonColor
-                                else Color.Transparent
-                            ),
-                            modifier = Modifier
-                                .requiredWidth(width = 440.dp)
-                                .requiredHeight(height = 16.dp)
-                        ) {
-                            Box(
-                                modifier = Modifier
-                                    .requiredWidth(width = 440.dp)
-                                    .requiredHeight(height = 16.dp)
-                            ) {
-                                Text(
-                                    text = it.id,
-                                    color = settingsManager.settings!!.currentTheme.textColor,
-                                    textAlign = TextAlign.Center,
-                                    style = TextStyle(fontSize = 13.sp),
-                                    modifier = Modifier
-                                        .align(alignment = Alignment.TopStart)
-                                        .offset(x = 25.dp)
-                                        .requiredWidth(width = 125.dp)
-                                )
-
-                                val inputFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssXXX")
-                                val date = inputFormat.parse(it.releaseTime)
-
-                                val outputFormat = SimpleDateFormat("dd.MM.yyyy")
-                                val formattedDate = outputFormat.format(date)
-                                Text(
-                                    text = formattedDate,
-                                    color = settingsManager.settings!!.currentTheme.textColor,
-                                    textAlign = TextAlign.Center,
-                                    style = TextStyle(fontSize = 13.sp),
-                                    modifier = Modifier
-                                        .align(alignment = Alignment.TopStart)
-                                        .offset(x = 267.dp)
-                                        .requiredWidth(width = 125.dp)
-                                )
-                            }
-                        }
+                        MinecraftVersion(it, screenData)
                     }
                 },
                 modifier = Modifier
@@ -171,9 +128,11 @@ fun changeVersionSector(
                     .requiredWidth(width = 72.dp)
                     .requiredHeight(height = 18.dp)
             ) {
-                circularCheckbox(
-                    checked = !isRelease.value,
-                    onCheckedChange = { isRelease.value = !isRelease.value },
+                CircularCheckbox(
+                    checked = !isRelease,
+                    onCheckedChange = {
+                        screenData.value = screenData.value.copy(isRelease = !isRelease)
+                    },
                     modifier = Modifier
                         .align(alignment = Alignment.TopStart)
                         .offset(y = 3.dp),
@@ -209,14 +168,72 @@ fun changeVersionSector(
                         .offset(x = 21.dp)
                 )
 
-                circularCheckbox(
-                    checked = isRelease.value,
-                    onCheckedChange = { isRelease.value = !isRelease.value },
+                CircularCheckbox(
+                    checked = isRelease,
+                    onCheckedChange = {
+                        screenData.value = screenData.value.copy(isRelease = !isRelease)
+                    },
                     modifier = Modifier
                         .align(alignment = Alignment.TopStart)
                         .offset(y = 3.dp),
                 )
             }
+        }
+    }
+}
+
+@Composable
+private fun MinecraftVersion(
+    version: VersionManifest.Version,
+    screenData: MutableState<CreateInstanceData>
+) {
+    val selectedVersion = screenData.value.selectedVersion
+
+    TextButton(
+        onClick = {
+            screenData.value = screenData.value.copy(selectedVersion = version)
+        },
+        colors = ButtonDefaults.buttonColors(
+            backgroundColor =
+            if (selectedVersion == version)
+                settingsManager.settings.currentTheme.selectedButtonColor
+            else Color.Transparent
+        ),
+        modifier = Modifier
+            .requiredWidth(width = 440.dp)
+            .requiredHeight(height = 16.dp)
+    ) {
+        Box(
+            modifier = Modifier
+                .requiredWidth(width = 440.dp)
+                .requiredHeight(height = 16.dp)
+        ) {
+            Text(
+                text = version.id,
+                color = settingsManager.settings.currentTheme.textColor,
+                textAlign = TextAlign.Center,
+                style = TextStyle(fontSize = 13.sp),
+                modifier = Modifier
+                    .align(alignment = Alignment.TopStart)
+                    .offset(x = 25.dp)
+                    .requiredWidth(width = 125.dp)
+            )
+
+            val inputFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssXXX")
+            val date = inputFormat.parse(version.releaseTime)
+
+            val outputFormat = SimpleDateFormat("dd.MM.yyyy")
+            val formattedDate = outputFormat.format(date)
+            Text(
+                text = formattedDate,
+                color = settingsManager.settings.currentTheme.textColor,
+                textAlign = TextAlign.Center,
+                style = TextStyle(fontSize = 13.sp),
+                modifier = Modifier
+                    .align(alignment = Alignment.TopStart)
+                    .offset(x = 267.dp)
+                    .requiredWidth(width = 125.dp)
+            )
         }
     }
 }

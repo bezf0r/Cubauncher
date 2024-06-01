@@ -23,14 +23,24 @@ import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.rememberWindowState
 import io.kamel.image.KamelImage
 import io.kamel.image.asyncPainterResource
+import ua.besf0r.cubauncher.account.AccountsUpdateEvent
+import ua.besf0r.cubauncher.accountsManager
+import ua.besf0r.cubauncher.laucnher.SettingsManager
 import ua.besf0r.cubauncher.settingsManager
 import ua.besf0r.cubauncher.window.createMainTitleBar
+import ua.besf0r.cubauncher.window.settings.account.AccountSector
 
 @Composable
-fun settingWindow(currentLog: MutableState<String>, onDismiss: () -> Unit) {
+fun SettingWindow(
+    currentLog: MutableState<String>,
+    currentSelection: SettingsSection? = null,
+    onDismiss: () -> Unit,
+) {
     val windowState = rememberWindowState(size = DpSize(720.dp, 512.dp))
 
-    val selectedSection = remember { mutableStateOf(SettingsSection.CONSOLE) }
+    val selectedSection = remember { mutableStateOf(
+        currentSelection ?: SettingsSection.CONSOLE
+    ) }
 
     Window(
         state = windowState,
@@ -85,7 +95,10 @@ fun settingWindow(currentLog: MutableState<String>, onDismiss: () -> Unit) {
                     modifier = Modifier
                         .requiredWidth(width = 190.dp)
                         .requiredHeight(height = 35.dp)
-                        .background(selectedSection.generateColorForButton(SettingsSection.CONSOLE))
+                        .background(selectedSection.generateColorForButton(
+                            SettingsSection.CONSOLE,
+                            settingsManager
+                        ))
                 ) {
                     Text(
                         text = "Консоль",
@@ -122,7 +135,10 @@ fun settingWindow(currentLog: MutableState<String>, onDismiss: () -> Unit) {
                     modifier = Modifier
                         .requiredWidth(width = 190.dp)
                         .requiredHeight(height = 35.dp)
-                        .background(selectedSection.generateColorForButton(SettingsSection.JAVA))
+                        .background(selectedSection.generateColorForButton(
+                            SettingsSection.JAVA,
+                            settingsManager
+                        ))
                 ) {
                     Text(
                         text = "Java",
@@ -158,7 +174,10 @@ fun settingWindow(currentLog: MutableState<String>, onDismiss: () -> Unit) {
                     modifier = Modifier
                         .requiredWidth(width = 190.dp)
                         .requiredHeight(height = 35.dp)
-                        .background(selectedSection.generateColorForButton(SettingsSection.ACCOUNT))
+                        .background(selectedSection.generateColorForButton(
+                            SettingsSection.ACCOUNT,
+                            settingsManager
+                        ))
                 ) {
                     Text(
                         text = "Аккаунт",
@@ -182,21 +201,26 @@ fun settingWindow(currentLog: MutableState<String>, onDismiss: () -> Unit) {
         }
         when (selectedSection.value) {
             SettingsSection.CONSOLE -> {
-                consoleSector(currentLog)
+                ConsoleSector(currentLog)
             }
 
             SettingsSection.JAVA -> {
-                javaSector()
+                JavaSector()
             }
 
-            SettingsSection.ACCOUNT -> {}
+            SettingsSection.ACCOUNT -> {
+                AccountSector()
+                AccountsUpdateEvent.publish(accountsManager.accounts)
+            }
         }
-
         createMainTitleBar(windowState) { onDismiss() }
     }
 }
 
-fun MutableState<SettingsSection>.generateColorForButton(section: SettingsSection): Color {
+fun MutableState<SettingsSection>.generateColorForButton(
+    section: SettingsSection,
+    settingsManager: SettingsManager
+): Color {
     return if (value == section)
         settingsManager.settings.currentTheme.selectedButtonColor
     else Color.Transparent

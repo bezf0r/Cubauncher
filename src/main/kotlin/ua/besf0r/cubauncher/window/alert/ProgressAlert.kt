@@ -20,7 +20,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 
 @Composable
-fun progressAlert(
+fun ProgressAlert(
     stage: MutableState<String?>,
     rate: MutableState<Int>,
     onDismissRequest: () -> Unit
@@ -34,7 +34,7 @@ fun progressAlert(
                 .requiredWidth(width = 350.dp)
                 .requiredHeight(height = 200.dp)
                 .clip(shape = RoundedCornerShape(10.dp))
-                .background(color = Color(0xff121212))
+                .background(color = Color(0xff2d2d2d))
         ) {
             LinearProgressIndicator(
                 color = Color(0xff5297ff),

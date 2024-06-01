@@ -22,16 +22,17 @@ import com.sun.management.OperatingSystemMXBean
 import ua.besf0r.cubauncher.laucnher.LauncherSettings
 import ua.besf0r.cubauncher.settingsManager
 import java.lang.management.ManagementFactory
+import kotlin.math.ceil
 import kotlin.math.roundToInt
 
 @Composable
-fun javaSector(){
+fun JavaSector(){
     val mb = 1024 * 1024
     val memorySize = remember {
-        (ManagementFactory.getOperatingSystemMXBean()
-                as OperatingSystemMXBean).totalMemorySize / mb }
+        (ManagementFactory.getOperatingSystemMXBean() as OperatingSystemMXBean).totalMemorySize / mb
+    }
 
-    val settings = settingsManager.settings!!
+    val settings = settingsManager.settings
 
     val minimumRam = remember { mutableStateOf(settings.minimumRam.toFloat()) }
     val maximumRam = remember { mutableStateOf(settings.maximumRam.toFloat()) }
@@ -139,7 +140,7 @@ fun javaSector(){
 }
 fun roundToBeautifulRamSize(size: Int, maxMemory: Int): Int {
     val sizeInGB = size / 1024.0
-    val roundedGB = Math.ceil(sizeInGB * 2) / 2
+    val roundedGB = ceil(sizeInGB * 2) / 2
 
     val rounded = (roundedGB * 1024).toInt()
 

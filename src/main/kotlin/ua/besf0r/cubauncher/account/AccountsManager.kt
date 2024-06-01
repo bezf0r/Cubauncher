@@ -1,58 +1,89 @@
 package ua.besf0r.cubauncher.account
 
+import kotlinx.coroutines.*
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.filterIsInstance
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
+import org.jetbrains.skiko.MainUIDispatcher
 import ua.besf0r.cubauncher.network.file.FilesManager.createFileIfNotExists
 import ua.besf0r.cubauncher.network.file.IOUtil
 import java.io.IOException
 import java.nio.file.Path
+import kotlin.coroutines.coroutineContext
 
 class AccountsManager(workDir: Path) {
     private val accountsFile: Path = workDir.resolve("accounts.json")
-    val accounts: HashMap<String?, Account>
+    var accounts: MutableList<Account>
+
+    private val json = Json {
+        serializersModule = Account.accountModule
+        ignoreUnknownKeys = true
+    }
 
     init {
-        try {
-            accountsFile.createFileIfNotExists()
-        } catch (e: IOException) {
-            throw RuntimeException(e)
-        }
-        accounts = LinkedHashMap()
+        accountsFile.createFileIfNotExists()
+        accounts = mutableListOf()
     }
 
     @Throws(IOException::class)
     fun loadAccounts() {
-        val loadedAccounts = Json.decodeFromString<Map<String, Account>>(
-            IOUtil.readUtf8String(accountsFile)
-        )
-        accounts.putAll(loadedAccounts)
+        try {
+            val loadedAccounts = Json.decodeFromString<List<Account>>(
+                IOUtil.readUtf8String(accountsFile)
+            )
+            accounts.addAll(loadedAccounts)
+        }catch (e: Exception){
+            e.printStackTrace()
+        }
     }
 
     fun createAccount(account: Account) {
-        if (accounts.containsKey(account.username)) return
+        if (accounts.getByName(account.username) != null) return
 
-        accounts[account.username] = account
-        return try {
-            save()
-        } catch (e: IOException) {
-            throw RuntimeException(e)
-        }
+        accounts.add(account)
+        AccountsUpdateEvent.publish(accounts)
+        save()
     }
 
-    fun deleteAccount(nickname: String?) {
-        if (accounts.containsKey(nickname)) {
-            accounts.remove(nickname)
-            try {
-                save()
-            } catch (e: IOException) {
-                throw RuntimeException(e)
-            }
-        }
+    fun deleteAccount(nickname: String) {
+        if (accounts.getByName(nickname) == null) return
+
+        accounts.remove(accounts.getByName(nickname))
+        AccountsUpdateEvent.publish(accounts)
+        save()
     }
 
     @Throws(IOException::class)
     fun save() {
-        val json = Json.encodeToString(accounts)
-        IOUtil.writeUtf8String(accountsFile, json)
+        try {
+            val json = json.encodeToString(accounts)
+            IOUtil.writeUtf8String(accountsFile, json)
+        } catch (e: IOException) {
+            throw Exception("Failed to save accounts",e)
+        }
+    }
+}
+fun MutableList<Account>.getByName(nickname: String): Account? {
+    return this.find { it.username == nickname }
+}
+object AccountsUpdateEvent {
+    private val _events = MutableSharedFlow<List<Account>>()
+    private val events = _events.asSharedFlow()
+
+    fun publish(event: List<Account>) {
+        CoroutineScope(Dispatchers.IO).launch { _events.emit(event) }
+    }
+
+    fun subscribe(onEvent: (List<Account>) -> Unit) {
+        CoroutineScope(Dispatchers.IO).launch {
+            events.filterIsInstance<List<Account>>()
+                .collectLatest { event ->
+                    coroutineContext.ensureActive()
+                    withContext(MainUIDispatcher){ onEvent(event) }
+                }
+        }
     }
 }

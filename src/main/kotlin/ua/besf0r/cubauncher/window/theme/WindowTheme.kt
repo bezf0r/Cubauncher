@@ -20,7 +20,7 @@ data class ThemeData(
     @Serializable(with = ColorSerializer::class) val textColor: Color,
     @Serializable(with = ColorSerializer::class) val selectedButtonColor: Color
 )
-object UiTheme {
+object WindowTheme {
     val dark = ThemeData(
         fontColor = Color(0xFF1E1E1E),
         panelsColor = Color(0xFF2D2D2D),

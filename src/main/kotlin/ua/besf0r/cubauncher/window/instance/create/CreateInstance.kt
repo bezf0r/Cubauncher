@@ -13,7 +13,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.rememberWindowState
 import kotlinx.serialization.json.Json
-import ua.besf0r.cubauncher.minecraft.ArgumentsForDownload
 import ua.besf0r.cubauncher.minecraft.version.VersionManifest
 import ua.besf0r.cubauncher.network.file.IOUtil
 import ua.besf0r.cubauncher.settingsManager
@@ -21,11 +20,19 @@ import ua.besf0r.cubauncher.versionsDir
 import ua.besf0r.cubauncher.window.createMainTitleBar
 
 @Composable
-fun createNewInstanceWindow(
+fun CreateInstanceWindow(
     onDismissed: () -> Unit,
-    onDownload: @Composable ArgumentsForDownload
+    onDownload: @Composable (MutableState<CreateInstanceData>) -> Unit
 ) {
     val windowState = rememberWindowState(size = DpSize(720.dp, 512.dp))
+
+    val json = Json { ignoreUnknownKeys = true }
+    val manifest = json.decodeFromString<VersionManifest.VersionManifest>(
+        IOUtil.readUtf8String(versionsDir.resolve("version_manifest_v2.json"))
+    )
+
+    val screenData = remember{ mutableStateOf(CreateInstanceData()) }
+    val isDownloading = remember { mutableStateOf(false) }
 
     Window(
         state = windowState,
@@ -37,48 +44,29 @@ fun createNewInstanceWindow(
             settingsManager.settings.currentTheme.fontColor
         ))
 
-        val json = Json { ignoreUnknownKeys = true }
-        val manifest = json.decodeFromString<VersionManifest.VersionManifest>(
-            IOUtil.readUtf8String(versionsDir.resolve("version_manifest_v2.json"))
-        )
-
-        val instanceName = remember { mutableStateOf<String?>(null) }
-        val selectedVersion = remember { mutableStateOf<VersionManifest.Version?>(null) }
-        val isRelease = remember { mutableStateOf(true) }
-        val isWithoutMods = remember { mutableStateOf(true) }
-        val isForge = remember { mutableStateOf(false) }
-        val isFabric = remember { mutableStateOf(false) }
-        val modManagerVersion = remember { mutableStateOf("") }
-        val isDownloading = remember { mutableStateOf(false) }
-
         createMainTitleBar(windowState){ onDismissed() }
 
-        iconButton()
-        changeNameSector(instanceName, selectedVersion)
+        IconSector()
+        ChangeNameSector(screenData)
+        ChangeVersionSector(manifest, versionType(screenData), screenData)
+        ChangeModsManagerSector(screenData)
+        ButtonsSector(isDownloading){ onDismissed() }
 
-        changeVersionSector(
-            manifest, versionType(isRelease), selectedVersion, isRelease
-        ) {
-            selectedVersion.value = it
-        }
-
-        changeModsManagerSector(
-            isWithoutMods, isForge, selectedVersion, isFabric
-        ) {
-            modManagerVersion.value = it
-        }
-
-        if (isDownloading.value) {
-            onDownload(
-                instanceName, selectedVersion, isForge, modManagerVersion
-            )
-        }
-        buttonsSector(isDownloading){ onDismissed() }
+        if (isDownloading.value) { onDownload(screenData) }
     }
 }
 
-private fun versionType(isRelease: MutableState<Boolean>) =
-    if (isRelease.value) "release" else "snapshot"
+data class CreateInstanceData(
+    val instanceName: String? = null,
+    var selectedVersion: VersionManifest.Version? = null,
+    var isRelease: Boolean = true,
+    val modManager: ModificationManager = ModificationManager.WITHOUT,
+    val modManagerVersion: String = ""
+)
+enum class ModificationManager{ WITHOUT, FORGE, FABRIC }
+
+private fun versionType(screenData: MutableState<CreateInstanceData>) =
+    if (screenData.value.isRelease) "release" else "snapshot"
 
 
 

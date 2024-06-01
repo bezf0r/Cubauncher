@@ -11,14 +11,15 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import ua.besf0r.cubauncher.minecraft.version.VersionManifest
 import ua.besf0r.cubauncher.settingsManager
 
 @Composable
-fun changeNameSector(
-    instanceName: MutableState<String?>,
-    selectedVersion: MutableState<VersionManifest.Version?>
+fun ChangeNameSector(
+    screenData: MutableState<CreateInstanceData>
 ) {
+    val instanceName = screenData.value.instanceName
+    val selectedVersion = screenData.value.selectedVersion
+
     Box(
         modifier = Modifier
             .requiredWidth(width = 605.dp)
@@ -29,11 +30,11 @@ fun changeNameSector(
             modifier = Modifier
                 .requiredWidth(width = 605.dp)
                 .requiredHeight(height = 100.dp)
-                .background(color = settingsManager.settings!!.currentTheme.panelsColor)
+                .background(color = settingsManager.settings.currentTheme.panelsColor)
         )
         Text(
             text = "Назва збірки:",
-            color = settingsManager.settings!!.currentTheme.textColor,
+            color = settingsManager.settings.currentTheme.textColor,
             style = TextStyle(fontSize = 16.sp),
             modifier = Modifier
                 .align(alignment = Alignment.TopStart)
@@ -42,16 +43,19 @@ fun changeNameSector(
 
         val maxLength = 30
         TextField(
-            value = instanceName.value ?: selectedVersion.value?.id ?: " ",
-            onValueChange = { if (it.length <= maxLength) instanceName.value = it },
+            value = instanceName ?: selectedVersion?.id ?: " ",
+            onValueChange = {
+                if (it.length <= maxLength)
+                    screenData.value = screenData.value.copy(instanceName = it)
+            },
             label = {},
             colors = TextFieldDefaults.outlinedTextFieldColors(
-                focusedBorderColor = settingsManager.settings!!.currentTheme.focusedBorderColor,
-                unfocusedBorderColor = settingsManager.settings!!.currentTheme.unfocusedBorderColor,
-                textColor = settingsManager.settings!!.currentTheme.textColor,
-                disabledTextColor = settingsManager.settings!!.currentTheme.textColor,
-                focusedLabelColor = settingsManager.settings!!.currentTheme.textColor,
-                unfocusedLabelColor = settingsManager.settings!!.currentTheme.textColor
+                focusedBorderColor = settingsManager.settings.currentTheme.focusedBorderColor,
+                unfocusedBorderColor = settingsManager.settings.currentTheme.unfocusedBorderColor,
+                textColor = settingsManager.settings.currentTheme.textColor,
+                disabledTextColor = settingsManager.settings.currentTheme.textColor,
+                focusedLabelColor = settingsManager.settings.currentTheme.textColor,
+                unfocusedLabelColor = settingsManager.settings.currentTheme.textColor
             ),
             textStyle = TextStyle(fontSize = 15.sp),
             modifier = Modifier
@@ -63,7 +67,7 @@ fun changeNameSector(
     }
 }
 @Composable
-fun iconButton() {
+fun IconSector() {
     TextButton(
         onClick = { },
         colors = ButtonDefaults.buttonColors(backgroundColor = Color.Transparent),
@@ -78,7 +82,7 @@ fun iconButton() {
             Box(
                 modifier = Modifier
                     .requiredSize(size = 100.dp)
-                    .background(color = settingsManager.settings!!.currentTheme.panelsColor)
+                    .background(color = settingsManager.settings.currentTheme.panelsColor)
             )
             //                    Image(
             //                        painter = painterResource(id = R.drawable.minecrafticon2048x20483ifq7gy71),

@@ -11,8 +11,6 @@ import androidx.compose.material.Text
 import androidx.compose.material.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -21,19 +19,18 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import ua.besf0r.cubauncher.minecraft.fabric.version.FabricVersionManifest
 import ua.besf0r.cubauncher.minecraft.forge.version.ForgeVersionManifest
-import ua.besf0r.cubauncher.minecraft.version.VersionManifest
 import ua.besf0r.cubauncher.settingsManager
-import ua.besf0r.cubauncher.window.circularCheckbox
+import ua.besf0r.cubauncher.window.component.CircularCheckbox
 
 @Composable
-fun changeModsManagerSector(
-    isSelectedWithoutMods: MutableState<Boolean>,
-    isSelectedForge: MutableState<Boolean>,
-    selectedVersion: MutableState<VersionManifest.Version?>,
-    isSelectedFabric: MutableState<Boolean>,
-    onVersionChange: (version: String) -> Unit
+fun ChangeModsManagerSector(
+    screenData: MutableState<CreateInstanceData>
 ) {
+    val modManager = screenData.value.modManager
+    val selectedVersion = screenData.value.selectedVersion
+
     Box(
         modifier = Modifier
             .requiredWidth(width = 500.dp)
@@ -75,17 +72,34 @@ fun changeModsManagerSector(
                     .requiredHeight(height = 15.dp)
             )
 
-            if (isSelectedWithoutMods.value) {
-                createModificationVersionsGrid(listOf())
-            } else {
-                if (isSelectedForge.value && selectedVersion.value != null) {
+            when(modManager){
+                ModificationManager.WITHOUT -> {
+                    CreateModificationVersionsGrid(
+                        listOf(), screenData
+                    )
+                }
+                ModificationManager.FORGE -> {
                     val forgeVersions = ForgeVersionManifest.versions.versions
-                    val version = forgeVersions.find {
-                        it.first == selectedVersion.value!!.id
+                    val versions = forgeVersions.find {
+                        it.first == selectedVersion?.id
                     }?.second ?: listOf()
-                    createModificationVersionsGrid(version.reversed()){
-                        onVersionChange(it)
-                    }
+
+                    CreateModificationVersionsGrid(
+                        versions.reversed(), screenData
+                    )
+                }
+
+                ModificationManager.FABRIC -> {
+                    val fabricVersions = FabricVersionManifest.loaderVersion
+                    val supportedVersions = FabricVersionManifest.minecraftVersions
+
+                    val versions = if (supportedVersions.find {
+                        it.version == selectedVersion?.id
+                    } == null) listOf() else fabricVersions
+
+                    CreateModificationVersionsGrid(
+                        versions.map { it.version }, screenData
+                    )
                 }
             }
         }
@@ -111,12 +125,10 @@ fun changeModsManagerSector(
                     .requiredWidth(width = 154.dp)
                     .requiredHeight(height = 20.dp)
             ) {
-                circularCheckbox(
-                    checked = isSelectedWithoutMods.value,
+                CircularCheckbox(
+                    checked = modManager == ModificationManager.WITHOUT,
                     onCheckedChange = {
-                        isSelectedWithoutMods.value = true
-                        isSelectedForge.value = false
-                        isSelectedFabric.value = false
+                        screenData.value = screenData.value.copy(modManager = ModificationManager.WITHOUT)
                     },
                     modifier = Modifier.align(alignment = Alignment.CenterStart)
                 )
@@ -139,12 +151,10 @@ fun changeModsManagerSector(
                     .requiredWidth(width = 162.dp)
                     .requiredHeight(height = 20.dp)
             ) {
-                circularCheckbox(
-                    checked = isSelectedForge.value,
+                CircularCheckbox(
+                    checked = modManager == ModificationManager.FORGE,
                     onCheckedChange = {
-                        isSelectedWithoutMods.value = false
-                        isSelectedForge.value = true
-                        isSelectedFabric.value = false
+                        screenData.value = screenData.value.copy(modManager = ModificationManager.FORGE)
                     },
                     modifier = Modifier.align(alignment = Alignment.CenterStart)
                 )
@@ -166,12 +176,10 @@ fun changeModsManagerSector(
                     .requiredWidth(width = 162.dp)
                     .requiredHeight(height = 20.dp)
             ) {
-                circularCheckbox(
-                    checked = isSelectedFabric.value,
+                CircularCheckbox(
+                    checked = modManager == ModificationManager.FABRIC,
                     onCheckedChange = {
-                        isSelectedWithoutMods.value = false
-                        isSelectedForge.value = false
-                        isSelectedFabric.value = true
+                        screenData.value = screenData.value.copy(modManager = ModificationManager.FABRIC)
                     },
                     modifier = Modifier.align(alignment = Alignment.CenterStart)
                 )
@@ -190,11 +198,12 @@ fun changeModsManagerSector(
     }
 }
 @Composable
-private fun createModificationVersionsGrid(
+fun CreateModificationVersionsGrid(
     versions: List<String>,
-    onVersionChange: (version: String) -> Unit = {}
+    screenData: MutableState<CreateInstanceData>
 ) {
-    val selectedVersion = remember { mutableStateOf<String?>(null) }
+    val modManagerVersion = screenData.value.modManagerVersion
+
     LazyVerticalGrid(
         columns = GridCells.Fixed(1),
         horizontalArrangement = Arrangement.spacedBy((-191).dp),
@@ -203,12 +212,11 @@ private fun createModificationVersionsGrid(
             items(versions) {
                 TextButton(
                     onClick = {
-                        onVersionChange(it)
-                        selectedVersion.value = it
+                        screenData.value = screenData.value.copy(modManagerVersion = it)
                     },
                     colors = ButtonDefaults.buttonColors(
-                        backgroundColor =
-                        if (selectedVersion.value == it) settingsManager.settings.currentTheme.selectedButtonColor
+                        backgroundColor = if (modManagerVersion == it)
+                            settingsManager.settings.currentTheme.selectedButtonColor
                         else Color.Transparent
                     ),
                     modifier = Modifier
@@ -216,7 +224,8 @@ private fun createModificationVersionsGrid(
                         .requiredHeight(height = 15.dp)
                 ) {
                     Box(
-                        Modifier.requiredWidth(width = 191.dp)
+                        modifier = Modifier
+                            .requiredWidth(width = 191.dp)
                             .requiredHeight(height = 15.dp)
                     ) {
                         Text(

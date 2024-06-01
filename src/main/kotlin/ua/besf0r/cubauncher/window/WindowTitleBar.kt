@@ -17,7 +17,7 @@ import androidx.compose.ui.window.FrameWindowScope
 import androidx.compose.ui.window.WindowState
 
 @Composable
-fun windowTitleBar(
+fun WindowTitleBar(
     canBeHided : Boolean = true,
     visible: () -> Unit = {},
     close: (() -> Unit)
@@ -89,7 +89,7 @@ fun windowTitleBar(
 fun FrameWindowScope.createMainTitleBar(
     windowState: WindowState, onDismissed: (() -> Unit)) {
     this.WindowDraggableArea {
-        windowTitleBar(
+        WindowTitleBar(
             visible = {
                 windowState.isMinimized = !windowState.isMinimized
             },

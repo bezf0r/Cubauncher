@@ -18,7 +18,7 @@ import ua.besf0r.cubauncher.account.MicrosoftAccount
 import java.util.concurrent.TimeoutException
 
 object MicrosoftOAuthUtils {
-    private const val CLIENT_ID = "feb3836f-0333-4185-8eb9-4cbf0498f947" // Minosoft 2 (microsoft-bixilon2)
+    private const val CLIENT_ID = "feb3836f-0333-4185-8eb9-4cbf0498f947"
     private const val TENANT = "consumers"
 
     private const val DEVICE_CODE_URL = "https://login.microsoftonline.com/$TENANT/oauth2/v2.0/devicecode"
@@ -26,50 +26,52 @@ object MicrosoftOAuthUtils {
     private const val XBOX_LIVE_AUTH_URL = "https://user.auth.xboxlive.com/user/authenticate"
     private const val XSTS_URL = "https://xsts.auth.xboxlive.com/xsts/authorize"
     private const val LOGIN_WITH_XBOX_URL = "https://api.minecraftservices.com/authentication/login_with_xbox"
-    private const val MAX_CHECK_TIME = 9000000
+    private const val MAX_CHECK_TIME = 900
 
     private val client = HttpClient(CIO)
+
+    var currentCallBack: MicrosoftDeviceCode? = null
 
     @Throws(TimeoutException::class)
     fun obtainDeviceCodeAsync(
         deviceCodeCallback: (MicrosoftDeviceCode) -> Unit,
         errorCallback: (Throwable) -> Unit,
         successCallback: (AuthenticationResponse) -> Unit
-    ) {
-        CoroutineScope(Dispatchers.IO).launch {
-            try {
-                val deviceCodeDeferred = async { obtainDeviceCode() }
-                val deviceCode = deviceCodeDeferred.await() ?: return@launch
+    ) = CoroutineScope(Dispatchers.IO).launch {
+        try {
+            val deviceCodeDeferred = async { obtainDeviceCode() }
+            val deviceCode = deviceCodeDeferred.await() ?: return@launch
 
-                println("Obtained device code: ${deviceCode.userCode}")
-                deviceCodeCallback(deviceCode)
-                val start = System.currentTimeMillis() / 1000
+            println("Obtained device code: ${deviceCode.userCode}")
+            deviceCodeCallback(deviceCode)
+            currentCallBack = deviceCode
 
-                suspend fun checkToken() {
-                    try {
-                        val responseDeferred = async { checkDeviceCode(deviceCode) }
-                        val response = responseDeferred.await()
-                        val time = System.currentTimeMillis() / 1000
-                        if (time > start + MAX_CHECK_TIME ) {
-                            throw TimeoutException("Could not obtain access for device code: ${deviceCode.userCode}")
-                        }
-                        if (response == null) {
-                            delay(deviceCode.interval * 1000L)
-                            checkToken()
-                        } else {
-                            println("Code (${deviceCode.userCode}) is valid, logging in...")
-                            successCallback(response)
-                        }
-                    } catch (exception: Throwable) {
-                        exception.printStackTrace()
-                        errorCallback(exception)
+            val start = System.currentTimeMillis() / 1000
+
+            suspend fun checkToken() {
+                try {
+                    val responseDeferred = async { checkDeviceCode(deviceCode) }
+                    val response = responseDeferred.await()
+                    val time = System.currentTimeMillis() / 1000
+                    if (time > start + MAX_CHECK_TIME) {
+                        throw TimeoutException("Could not obtain access for device code: ${deviceCode.userCode}")
                     }
+
+                    if (response == null) {
+                        delay(deviceCode.interval * 1000L)
+                        checkToken()
+                    } else {
+                        println("Code (${deviceCode.userCode}) is valid, logging in...")
+                        successCallback(response)
+                    }
+                } catch (exception: Throwable) {
+                    errorCallback(exception)
                 }
-                checkToken()
-            } catch (exception: Throwable) {
-                exception.printStackTrace()
-                errorCallback(exception)
             }
+            checkToken()
+        } catch (exception: Throwable) {
+            errorCallback(exception)
+
         }
     }
 
@@ -105,7 +107,6 @@ object MicrosoftOAuthUtils {
         }
 
         if (response.status != HttpStatusCode.OK) {
-            println(response.bodyAsText())
             return null
         }
 
@@ -113,14 +114,14 @@ object MicrosoftOAuthUtils {
     }
 
     @OptIn(InternalAPI::class)
-    suspend fun refreshToken(token: AuthenticationResponse.MicrosoftTokens): AuthenticationResponse? {
+    suspend fun refreshToken(refreshToken: String): AuthenticationResponse? {
         val response: HttpResponse = client.post(TOKEN_CHECK_URL) {
             contentType(ContentType.Application.Json)
             body = MultiPartFormDataContent(formData {
                 append("client_id", CLIENT_ID)
                 append("grant_type", "refresh_token")
                 append("scope", "XboxLive.signin offline_access")
-                append("refresh_token", token.refreshToken)
+                append("refresh_token", refreshToken)
             })
         }
 
@@ -150,9 +151,9 @@ object MicrosoftOAuthUtils {
                    uuid = profile.id,
                    username = profile.name,
                    accessToken = minecraftToken.accessToken,
+                   refreshToken = msaTokens.refreshToken
                )
                onLogin(account)
-               println("Microsoft account login successful (username=${account.username}, uuid=${account.uuid})")
            }
        }
     }

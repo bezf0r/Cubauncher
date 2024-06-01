@@ -1,13 +1,15 @@
 package ua.besf0r.cubauncher.instance
 
+import kotlinx.coroutines.*
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import ua.besf0r.cubauncher.instancesDir
-import ua.besf0r.cubauncher.network.file.FilesManager
-import ua.besf0r.cubauncher.network.file.IOUtil
 import ua.besf0r.cubauncher.minecraft.OperatingSystem
+import ua.besf0r.cubauncher.network.file.FilesManager
 import ua.besf0r.cubauncher.network.file.FilesManager.createDirectoryIfNotExists
 import ua.besf0r.cubauncher.network.file.FilesManager.createFileIfNotExists
+import ua.besf0r.cubauncher.network.file.IOUtil
+import ua.besf0r.cubauncher.settingsManager
 import java.io.File
 import java.io.IOException
 import java.nio.file.Files
@@ -20,8 +22,8 @@ class InstanceManager(
 ) {
     val instances = mutableListOf<Instance>()
 
-    private val minecraftDirName: String = if (OperatingSystem.oS == OperatingSystem.MACOS)
-        "minecraft" else ".minecraft"
+    private val minecraftDirName: String =
+        if (OperatingSystem.oS == OperatingSystem.MACOS) "minecraft" else ".minecraft"
 
     init {
         try {
@@ -33,6 +35,8 @@ class InstanceManager(
 
     @Throws(IOException::class)
     fun loadInstances() {
+        instances.clear()
+
         val paths = mutableListOf<File>()
 
         workDir.toFile().listFiles()?.forEach { paths.add(it) }
@@ -79,7 +83,6 @@ class InstanceManager(
 
         val minecraftDir = instanceDir.resolve(minecraftDirName)
         minecraftDir.createDirectoryIfNotExists()
-
         val instanceFile = instanceDir.resolve("instance.json")
         instanceDir.createFileIfNotExists()
 
@@ -94,6 +97,11 @@ class InstanceManager(
         val instanceDir = getInstanceDir(instance)
         if (Files.exists(instanceDir)) {
             FilesManager.deleteDirectoryRecursively(instanceDir)
+        }
+
+        val selected = settingsManager.settings.selectedInstance
+        if (selected == name){
+            settingsManager.settings.selectedInstance = null
         }
         instances.remove(instance)
     }
@@ -110,10 +118,8 @@ class InstanceManager(
         return workDir.resolve(instance).resolve(".minecraft")
     }
 
-
     fun getInstanceByName(name: String): Instance? {
         return instances.find { it.name == name }
     }
-
 }
 

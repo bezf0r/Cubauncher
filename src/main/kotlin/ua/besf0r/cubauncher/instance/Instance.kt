@@ -13,19 +13,23 @@ import ua.besf0r.cubauncher.versionsDir
 import java.nio.file.Path
 import java.nio.file.Paths
 import kotlin.io.path.Path
+import kotlin.io.path.exists
 import kotlin.io.path.pathString
 
 @Serializable
 class Instance(
     var name: String, var minecraftVersion: String
 ) {
-
+    var mainClass: String = "net.minecraft.client.main.Main"
     @Serializable(MinecraftVersionSerializer::class)
     var versionInfo: MinecraftVersion? = null
 
     var forge: ForgeProfile? = null
     @Serializable(PathListSerializer::class)
     var forgeLibraries: MutableList<Path> = mutableListOf()
+
+    @Serializable(PathListSerializer::class)
+    var fabricLibraries: MutableList<Path> = mutableListOf()
 }
 object PathListSerializer : KSerializer<MutableList<Path>> {
     override val descriptor: SerialDescriptor = ListSerializer(String.serializer()).descriptor
@@ -53,7 +57,8 @@ object MinecraftVersionSerializer : KSerializer<MinecraftVersion?> {
     private val json = Json { ignoreUnknownKeys = true }
 
     override fun deserialize(decoder: Decoder): MinecraftVersion {
-        val path = decoder.decodeString()
-        return json.decodeFromString<MinecraftVersion>(IOUtil.readUtf8String(Path(path)))
+        val path = Path(decoder.decodeString())
+        if (!path.exists()) return MinecraftVersion()
+        return json.decodeFromString<MinecraftVersion>(IOUtil.readUtf8String(path))
     }
 }

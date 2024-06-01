@@ -9,14 +9,15 @@ import java.io.*
 
 object LoggerManager {
     @Composable
-    fun runLogger(currentLog: MutableState<String>){
-
+    fun runLogger(currentLog: MutableState<String>) {
         LaunchedEffect(Unit) {
             val pipedOutputStream = PipedOutputStream()
             val pipedInputStream = PipedInputStream(pipedOutputStream)
 
             CoroutineScope(Dispatchers.IO).launch {
                 val reader = BufferedReader(InputStreamReader(pipedInputStream))
+                val logBuffer = StringBuilder()
+                val logLines = ArrayDeque<String>()
                 var line: String?
 
                 while (isActive) {
@@ -24,12 +25,14 @@ object LoggerManager {
                     if (line == null) break
 
                     withContext(MainUIDispatcher) {
-                        currentLog.value += "$line\n"
-
-                        val lines = currentLog.value.lineSequence().toList()
-                        if (lines.size > 20000) {
-                            currentLog.value = lines.drop(1).joinToString("\n")
+                        logLines.add(line)
+                        if (logLines.size > 20000) {
+                            logLines.removeFirst()
                         }
+
+                        logBuffer.setLength(0)
+                        logLines.forEach { logBuffer.append(it).append('\n') }
+                        currentLog.value = logBuffer.toString()
                     }
                 }
             }

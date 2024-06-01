@@ -8,7 +8,6 @@ import androidx.compose.foundation.layout.requiredWidth
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.List
@@ -24,7 +23,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import io.kamel.image.KamelImage
 import io.kamel.image.asyncPainterResource
-import ua.besf0r.cubauncher.account.OfflineAccount
 import ua.besf0r.cubauncher.instance.InstanceRunner
 import ua.besf0r.cubauncher.instanceManager
 import ua.besf0r.cubauncher.settingsManager
@@ -32,7 +30,7 @@ import ua.besf0r.cubauncher.workDir
 import java.awt.Desktop
 
 @Composable
-fun leftColumn() {
+fun LeftColumn() {
     Box(
         modifier = Modifier
             .requiredWidth(width = 180.dp)
@@ -88,17 +86,15 @@ fun leftColumn() {
             val selectedInstance = settingsManager.settings.selectedInstance
             if (selectedInstance != null) {
                 val instance = instanceManager.getInstanceByName(selectedInstance) ?: return
-                InstanceRunner(OfflineAccount("besf0r"), instance).run()
+                InstanceRunner(instance).run()
             }
         }
         TextButton(
-            onClick = {
-                isClickedStart.value = true
-            },
+            onClick = { isClickedStart.value = true },
             colors = ButtonDefaults.buttonColors(backgroundColor = Color.Transparent),
             modifier = Modifier
                 .align(alignment = Alignment.TopStart)
-                .offset(x = 25.dp, y = 20.dp)
+                .offset(x = 25.dp, y = 29.dp)
                 .requiredWidth(width = 130.dp)
                 .requiredHeight(height = 30.dp)
         ) {
@@ -112,9 +108,7 @@ fun leftColumn() {
                 Text(
                     text = "Запуск",
                     color = settingsManager.settings.currentTheme.textColor,
-                    style = TextStyle(
-                        fontSize = 14.5.sp
-                    ),
+                    style = TextStyle(fontSize = 14.5.sp),
                     modifier = Modifier
                         .align(alignment = Alignment.Center)
                         .offset(x = (-5).dp)
@@ -134,49 +128,6 @@ fun leftColumn() {
             }
         }
 
-
-        TextButton(
-            onClick = { },
-            colors = ButtonDefaults.buttonColors(backgroundColor = Color.Transparent),
-            modifier = Modifier
-                .align(alignment = Alignment.TopStart)
-                .offset(x = 25.dp, y = 55.dp)
-                .requiredWidth(width = 130.dp)
-                .requiredHeight(height = 30.dp)
-        ) {
-            Box(
-                modifier = Modifier
-                    .requiredWidth(width = 130.dp)
-                    .requiredHeight(height = 30.dp)
-                    .clip(shape = RoundedCornerShape(3.5.dp))
-                    .background(color = settingsManager.settings.currentTheme.buttonColor)
-            ) {
-                Text(
-                    text = "Редагувати",
-                    color = settingsManager.settings.currentTheme.textColor,
-                    style = TextStyle(
-                        fontSize = 14.5.sp
-                    ),
-                    modifier = Modifier
-                        .align(alignment = Alignment.Center)
-                        .offset(x = 13.dp)
-                        .requiredWidth(width = 90.dp)
-                        .requiredHeight(height = 18.dp)
-                )
-                Icon(
-                    imageVector = Icons.Filled.Edit,
-                    contentDescription = "",
-                    modifier = Modifier
-                        .align(alignment = Alignment.CenterStart)
-                        .offset(x = 10.dp)
-                        .requiredWidth(width = 20.dp)
-                        .requiredHeight(height = 20.dp),
-                    tint = settingsManager.settings.currentTheme.buttonIconColor
-                )
-            }
-        }
-
-
         TextButton(
             onClick = {
                 val currentInstance = settingsManager.settings.selectedInstance
@@ -191,7 +142,7 @@ fun leftColumn() {
             colors = ButtonDefaults.buttonColors(backgroundColor = Color.Transparent),
             modifier = Modifier
                 .align(alignment = Alignment.TopStart)
-                .offset(x = 25.dp, y = 90.dp)
+                .offset(x = 25.dp, y = 66.dp)
                 .requiredWidth(width = 130.dp)
                 .requiredHeight(height = 30.dp)
         ) {
@@ -205,9 +156,7 @@ fun leftColumn() {
                 Text(
                     text = "Директорія",
                     color = settingsManager.settings.currentTheme.textColor,
-                    style = TextStyle(
-                        fontSize = 14.5.sp
-                    ),
+                    style = TextStyle(fontSize = 14.5.sp),
                     modifier = Modifier
                         .align(alignment = Alignment.Center)
                         .offset(x = 13.dp)
@@ -226,7 +175,6 @@ fun leftColumn() {
             }
         }
 
-
         TextButton(
             onClick = {
                 if (settingsManager.settings.selectedInstance == null) return@TextButton
@@ -237,7 +185,7 @@ fun leftColumn() {
             modifier = Modifier
                 .requiredWidth(width = 130.dp)
                 .requiredHeight(height = 30.dp)
-                .offset(25.dp,125.dp)
+                .offset(25.dp,103.dp)
         ) {
             Box(
                 modifier = Modifier

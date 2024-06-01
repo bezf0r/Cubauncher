@@ -21,10 +21,11 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import ua.besf0r.cubauncher.laucnher.SettingsManager
 import ua.besf0r.cubauncher.settingsManager
 
 @Composable
-fun buttonsSector(
+fun ButtonsSector(
     canStartDownload: MutableState<Boolean>,
     onDismissRequest: () -> Unit
 ) {
@@ -64,7 +65,7 @@ fun buttonsSector(
             Icon(
                 imageVector = Icons.Filled.AddCircle,
                 contentDescription = "",
-                tint = settingsManager.settings!!.currentTheme.buttonIconColor,
+                tint = settingsManager.settings.currentTheme.buttonIconColor,
                 modifier = Modifier
                     .align(alignment = Alignment.TopStart)
                     .offset(x = 12.dp, y = 6.dp)
@@ -100,7 +101,7 @@ fun buttonsSector(
             Icon(
                 imageVector = Icons.Filled.Close,
                 contentDescription = "",
-                tint = settingsManager.settings!!.currentTheme.buttonIconColor,
+                tint = settingsManager.settings.currentTheme.buttonIconColor,
                 modifier = Modifier
                     .align(alignment = Alignment.TopStart)
                     .offset(x = 12.dp, y = 6.dp)

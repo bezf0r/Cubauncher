@@ -11,13 +11,7 @@ data class ForgeProfile(
     val libraries: List<Library>? = null,
     val type: String? = null,
     val inheritsFrom: String? = null,
-    val arguments: ForgeArguments? = null,
-    @Transient
-    val _comment: Any = "",
-    @Transient
-    val time: Any = "",
-    @Transient
-    val logging: Any = "",
+    val arguments: ForgeArguments? = null
 ){
     @Serializable
     data class Library(

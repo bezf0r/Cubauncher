@@ -7,5 +7,6 @@ import java.util.*
 class MicrosoftAccount (
     override var username: String,
     override var uuid: String,
-    override var accessToken: String
+    override var accessToken: String,
+    override var refreshToken: String
 ) : Account()

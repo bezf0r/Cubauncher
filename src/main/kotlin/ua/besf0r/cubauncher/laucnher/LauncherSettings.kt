@@ -2,7 +2,7 @@ package ua.besf0r.cubauncher.laucnher
 
 import kotlinx.serialization.Serializable
 import ua.besf0r.cubauncher.window.theme.ThemeData
-import ua.besf0r.cubauncher.window.theme.UiTheme
+import ua.besf0r.cubauncher.window.theme.WindowTheme
 
 @Serializable
 data class LauncherSettings (
@@ -10,5 +10,5 @@ data class LauncherSettings (
     var maximumRam: Int = 2048,
     var selectedInstance: String? = null,
     var selectedAccount: String? = null,
-    val currentTheme: ThemeData = UiTheme.dark
+    val currentTheme: ThemeData = WindowTheme.dark
 )

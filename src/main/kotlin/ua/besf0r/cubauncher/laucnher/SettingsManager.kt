@@ -11,8 +11,8 @@ class SettingsManager(
     private val settingsFile: Path
 ) {
     lateinit var settings: LauncherSettings
-    private val json = Json { ignoreUnknownKeys = true }
 
+    private val json = Json { ignoreUnknownKeys = true }
     fun loadSettings(){
         settingsFile.createFileIfNotExists()
 

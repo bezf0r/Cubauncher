@@ -1,29 +1,28 @@
 package ua.besf0r.cubauncher.instance
 
 import androidx.compose.runtime.*
+import io.kamel.core.utils.File
 import kotlinx.coroutines.*
 import org.apache.commons.text.StringSubstitutor
 import ua.besf0r.cubauncher.*
 import ua.besf0r.cubauncher.account.Account
+import ua.besf0r.cubauncher.account.MicrosoftAccount
+import ua.besf0r.cubauncher.account.getByName
+import ua.besf0r.cubauncher.account.microsoft.MicrosoftOAuthUtils
 import ua.besf0r.cubauncher.minecraft.*
-import ua.besf0r.cubauncher.minecraft.OperatingSystem
 import java.io.*
 import java.nio.charset.StandardCharsets
-import java.nio.file.Path
+import java.util.concurrent.Executors
 import kotlin.io.path.pathString
 
 
-class InstanceRunner(
-    private val account: Account, private val instance: Instance
-){
+class InstanceRunner(private val instance: Instance){
 
-    @OptIn(DelicateCoroutinesApi::class)
-    @Composable
     fun run() {
-        GlobalScope.launch(Dispatchers.IO) {
+        val dispatcher = Executors.newFixedThreadPool(1).asCoroutineDispatcher()
+        CoroutineScope(dispatcher).launch{
             val instanceManager = instanceManager
-
-            val arguments = getArguments(librariesDir)
+            val arguments = getArguments()
 
             val exitCode = runGameProcess(arguments)
             println("Minecraft process finished with exit code $exitCode")
@@ -35,15 +34,15 @@ class InstanceRunner(
     private fun generateClassPath(): List<String>{
         val classpath: MutableList<String> = mutableListOf()
 
-        val version = instance.versionInfo!!.id
+        val version = instance.versionInfo!!.id ?: throw Exception("Failed to get version id")
 
-        val originalClientPath = versionsDir.resolve(version).resolve(
-            "${version}.jar"
-        ).toAbsolutePath()
-
-        classpath.add(originalClientPath.toString())
+        val originalClientPath = versionsDir.resolve(version)
+            .resolve("${version}.jar").toAbsolutePath()
 
         instance.forgeLibraries.forEach {
+            classpath.add(it.pathString)
+        }
+        instance.fabricLibraries.forEach {
             classpath.add(it.pathString)
         }
 
@@ -53,25 +52,26 @@ class InstanceRunner(
             }
         }.let(classpath::addAll)
 
+        classpath.add(originalClientPath.toString())
+
         return classpath.distinct()
     }
 
     @Throws(IOException::class)
-    private fun getArguments(
-        nativesDir: Path
-    ): MutableList<String> {
+    private fun getArguments(): MutableList<String> {
 
         val instanceDir = instanceManager.getMinecraftDir(instance)
-
-        val assetsDir: Path = assetsDir
         val arguments = mutableListOf<String>()
 
-        arguments.add(OperatingSystem.javaType)
+        val natives = versionsDir.resolve(instance.minecraftVersion).resolve("natives")
+
+        arguments.add(OperatingSystem.getJavaPath(instance.versionInfo!!))
 
         val classpath = generateClassPath()
 
+        val account = validateAccount()
+
         val args = mapOf(
-            "natives_directory" to nativesDir.pathString,
             "launcher_name" to "Cubauncher(1.0-beta)",
             "launcher_version" to "1.0-beta",
             "classpath" to classpath.joinToString(File.pathSeparator),
@@ -82,7 +82,7 @@ class InstanceRunner(
             "game_directory" to instanceDir.toAbsolutePath().pathString,
             "assets_root" to assetsDir.toAbsolutePath().pathString,
             "assets_index_name" to instance.versionInfo!!.assets,
-            "auth_uuid" to account.uuid.toString(),
+            "auth_uuid" to account.uuid,
             "auth_access_token" to account.accessToken,
             "user_type" to "msa",
             "version_type" to "Cubauncher",
@@ -93,22 +93,24 @@ class InstanceRunner(
 
         val substitutor = StringSubstitutor(args)
 
-        arguments.add("-Xms" + settingsManager.settings!!.minimumRam + "m")
-        arguments.add("-Xmx" + settingsManager.settings!!.maximumRam + "m")
+        arguments.add("-Xms" + settingsManager.settings.minimumRam + "m")
+        arguments.add("-Xmx" + settingsManager.settings.maximumRam + "m")
 
-        arguments.add(substitutor.replace("-Djava.library.path=\${natives_directory}"))
-        arguments.add("-DlibraryDirectory=${nativesDir.pathString}")
+        arguments.add("-XX:HeapDumpPath=MojangTricksIntelDriversForPerformance_javaw.exe_minecraft.exe.heapdump")
+
+        arguments.add("-Djava.library.path=$natives")
+        arguments.add("-DlibraryDirectory=${librariesDir.pathString}")
 
         arguments.add(substitutor.replace("-cp"))
         arguments.add(substitutor.replace("\${classpath}"))
+        arguments.add(instance.mainClass)
 
-        if (instance.forge != null) {
-            arguments.add(instance.forge!!.mainClass!!)
-        }else {
-            arguments.add(instance.versionInfo!!.mainClass!!)
-        }
 
         instance.versionInfo!!.arguments?.game?.flatMap { it.value }?.forEach {
+            arguments.add(substitutor.replace(it))
+        }
+
+        instance.versionInfo?.minecraftArguments?.split("\\s")?.forEach {
             arguments.add(substitutor.replace(it))
         }
 
@@ -116,21 +118,39 @@ class InstanceRunner(
 
         listOf(
             "--demo",
-            "--quickPlayPath",
-            "\${quickPlayPath}",
-            "--quickPlaySingleplayer",
-            "\${quickPlaySingleplayer}",
-            "--quickPlayMultiplayer",
-            "\${quickPlayMultiplayer}",
-            "--quickPlayRealms",
-            "\${quickPlayRealms}"
+            "--quickPlayPath", "\${quickPlayPath}",
+            "--quickPlaySingleplayer", "\${quickPlaySingleplayer}",
+            "--quickPlayMultiplayer", "\${quickPlayMultiplayer}",
+            "--quickPlayRealms", "\${quickPlayRealms}"
         ).forEach { arguments.remove(it) }
 
         return arguments
     }
 
+    private fun validateAccount(): Account = runBlocking{
+        val settings = settingsManager.settings
+
+        val account = accountsManager.accounts
+            .getByName(settings.selectedAccount ?: "")
+
+        if (account == null) throw NullPointerException("Selected account is null, please select account")
+
+
+        if (account is MicrosoftAccount){
+            val refreshed = MicrosoftOAuthUtils.refreshToken(account.refreshToken) ?: return@runBlocking account
+
+            MicrosoftOAuthUtils.loginToMicrosoftAccount(refreshed) { refreshAccount ->
+                accountsManager.deleteAccount(account.username)
+
+                accountsManager.createAccount(refreshAccount)
+                println("Успішний вхід для користувача: ${refreshAccount.username}")
+            }
+        }
+        return@runBlocking account
+    }
+
     private fun runGameProcess(command: List<String>): Int {
-        val process = ProcessBuilder(command).start()
+        val process = Runtime.getRuntime().exec(command.joinToString(" "))
 
         BufferedReader(InputStreamReader(process.inputStream, StandardCharsets.UTF_8)).use { reader ->
             var line: String?

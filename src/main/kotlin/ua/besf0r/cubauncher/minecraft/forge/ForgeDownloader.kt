@@ -11,6 +11,7 @@ import ua.besf0r.cubauncher.librariesDir
 import ua.besf0r.cubauncher.network.DownloadListener
 import ua.besf0r.cubauncher.network.DownloadManager
 import ua.besf0r.cubauncher.minecraft.OperatingSystem
+import ua.besf0r.cubauncher.network.file.FilesManager.createDirectoryIfNotExists
 import ua.besf0r.cubauncher.network.file.FilesManager.createFileIfNotExists
 import ua.besf0r.cubauncher.workDir
 import java.io.*
@@ -24,24 +25,27 @@ import kotlin.io.path.deleteIfExists
 class ForgeDownloader {
     private val json = Json { ignoreUnknownKeys = true }
 
+    private val installer = "https://maven.minecraftforge.net/net/minecraftforge/forge/"
+
     @Throws(IOException::class)
     fun download(
         progress: DownloadListener,
         forgeVersion: String,
         instance: Instance
     ) {
-        progress.onStageChanged("Downloading Forge($forgeVersion)")
+        progress.onStageChanged("Завантажуємо Forge($forgeVersion)")
 
-        val installerUrl = "https://maven.minecraftforge.net/net/minecraftforge/forge/" +
-                "${forgeVersion}/forge-${forgeVersion}-installer.jar"
+        val installerUrl = installer + "${forgeVersion}/forge-${forgeVersion}-installer.jar"
 
         val installerPath = workDir.resolve("forge-installer-${forgeVersion}.jar")
         val installerLog = workDir.resolve("forge-installer-${forgeVersion}.jar.log")
 
+        val profiles = workDir.resolve("launcher_profiles.json")
+        profiles.createFileIfNotExists()
+
         runBlocking {
-            withContext(Dispatchers.IO) {
-                DownloadManager(installerUrl, null, 0, installerPath)
-                    .execute { value, size -> progress.onProgress(value, size) }
+            DownloadManager(installerUrl, saveAs = installerPath).execute { value, size ->
+                progress.onProgress(value, size)
             }
         }
 
@@ -50,10 +54,10 @@ class ForgeDownloader {
         val libraries: MutableList<Path> = mutableListOf()
 
         val zipFile = ZipFile(installerPath.toFile())
-        zipFile.use { zipFile ->
-            val entry = zipFile.getEntry("version.json")
+        zipFile.use { zip ->
+            val entry = zip.getEntry("version.json")
             if (entry != null) {
-                val stream = zipFile.getInputStream(entry).readBytes().decodeToString()
+                val stream = zip.getInputStream(entry).readBytes().decodeToString()
                 val installProfile = json.decodeFromString<ForgeProfile>(stream)
                 forgeProfile = installProfile
             }
@@ -67,9 +71,6 @@ class ForgeDownloader {
             libraries.add(path)
         }
 
-        val profiles = workDir.resolve("launcher_profiles.json")
-        profiles.createFileIfNotExists()
-
         val process = ProcessBuilder(
             listOf(
                 OperatingSystem.javaType,
@@ -77,7 +78,7 @@ class ForgeDownloader {
                 installerPath.toFile().name,
                 "--installClient"
             )
-        ).inheritIO().directory(workDir.toFile()).start()
+        ).directory(workDir.toFile()).start()
 
         BufferedReader(InputStreamReader(process.inputStream, StandardCharsets.UTF_8)).use { reader ->
             var line: String?
@@ -88,13 +89,15 @@ class ForgeDownloader {
         process.waitFor()
 
         val mods = instanceManager.getMinecraftDir(instance).resolve("mods")
-        mods.createFileIfNotExists()
+        mods.createDirectoryIfNotExists()
 
         profiles.deleteIfExists()
         installerLog.deleteIfExists()
-        //installerPath.deleteIfExists()
+        installerPath.deleteIfExists()
 
         instance.forge = forgeProfile
         instance.forgeLibraries = libraries
+
+        instance.mainClass = forgeProfile?.mainClass.toString()
     }
 }

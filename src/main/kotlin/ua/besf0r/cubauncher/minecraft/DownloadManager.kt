@@ -4,22 +4,28 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import kotlinx.coroutines.*
-import ua.besf0r.cubauncher.*
-import ua.besf0r.cubauncher.instance.CreateInstance
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
+import ua.besf0r.cubauncher.instanceManager
+import ua.besf0r.cubauncher.minecraft.fabric.FabricDownloader
 import ua.besf0r.cubauncher.minecraft.forge.ForgeDownloader
-import ua.besf0r.cubauncher.minecraft.version.VersionManifest
 import ua.besf0r.cubauncher.network.DownloadListener
-import ua.besf0r.cubauncher.window.alert.progressAlert
+import ua.besf0r.cubauncher.window.alert.ProgressAlert
+import ua.besf0r.cubauncher.window.instance.create.CreateInstanceData
+import ua.besf0r.cubauncher.window.instance.create.ModificationManager
 
 @Composable
 fun downloadFiles(
-    instanceName: MutableState<String?>,
-    selectedVersion: MutableState<VersionManifest.Version?>,
-    isForge: MutableState<Boolean>,
-    modManagerVersion: MutableState<String>,
+    screenData: MutableState<CreateInstanceData>,
     isDismiss: MutableState<Boolean>
 ) {
+    val instanceName = screenData.value.instanceName
+    val selectedVersion = screenData.value.selectedVersion
+    val modManagerVersion = screenData.value.modManagerVersion
+    val modManager = screenData.value.modManager
+
     val rememberStage = remember { mutableStateOf<String?>(null) }
     val rememberRate = remember { mutableStateOf(0) }
 
@@ -38,42 +44,45 @@ fun downloadFiles(
             }
         }
 
-    val currentJob = CoroutineScope(Dispatchers.IO)
+    val currentJob = CoroutineScope(Job())
 
-    val minecraftDownloader = MinecraftDownloader(
-       currentJob, versionsDir, assetsDir, librariesDir, downloadListener
-    )
+    val minecraftDownloader = MinecraftDownloader(currentJob, downloadListener)
 
-    progressAlert(rememberStage, rememberRate) {
+    ProgressAlert(rememberStage, rememberRate) {
         isDismiss.value = false
         minecraftDownloader.cancel(
-            instanceName.value ?: selectedVersion.value!!.id
+            instanceName ?: selectedVersion!!.id
         )
     }
 
     currentJob.launch {
         runBlocking {
-            val instance = CreateInstance(
-                instanceName.value,
-                selectedVersion.value?.id
-            ).createFiles() ?: return@runBlocking
+            if (selectedVersion == null) return@runBlocking
+
+            val correctName = instanceName?: selectedVersion.id
+            val instance = instanceManager.createInstance(correctName,selectedVersion.id)
 
             minecraftDownloader.downloadMinecraft(instance)
 
-            if (isForge.value) {
-                ForgeDownloader().download(downloadListener,
-                    modManagerVersion.value, instance)
+            if (modManager == ModificationManager.WITHOUT) {
+                instance.mainClass = instance.versionInfo?.mainClass.toString()
             }
+
+            if (modManager == ModificationManager.FORGE) {
+                ForgeDownloader().download(
+                    downloadListener, modManagerVersion, instance
+                )
+            }
+            if (modManager == ModificationManager.FABRIC){
+                FabricDownloader().download(
+                    downloadListener,modManagerVersion,instance
+                )
+            }
+
             instanceManager.update(instance)
             isDismiss.value = false
         }
     }
 }
-typealias ArgumentsForDownload = (
-    instanceName: MutableState<String?>,
-    selectedVersion: MutableState<VersionManifest.Version?>,
-    isForge: MutableState<Boolean>,
-    modManagerVersion: MutableState<String>
-) -> Unit
 
 

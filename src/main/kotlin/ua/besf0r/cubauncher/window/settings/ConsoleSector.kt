@@ -21,7 +21,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
 @Composable
-fun consoleSector(currentLog: MutableState<String>) {
+fun ConsoleSector(currentLog: MutableState<String>) {
     Box(
         modifier = Modifier
             .offset(x = 195.dp)
@@ -59,10 +59,7 @@ fun consoleSector(currentLog: MutableState<String>) {
                 Text(
                     text = currentLog.value,
                     color = Color.White,
-                    style = TextStyle(
-                        fontSize = 10.sp,
-                        fontWeight = FontWeight.Medium
-                    ),
+                    style = TextStyle(fontSize = 10.sp, fontWeight = FontWeight.Medium),
                     modifier = Modifier
                         .align(alignment = Alignment.TopStart)
                         .offset(x = 4.dp, y = 22.dp)

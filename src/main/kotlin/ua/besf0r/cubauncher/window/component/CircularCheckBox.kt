@@ -1,4 +1,4 @@
-package ua.besf0r.cubauncher.window
+package ua.besf0r.cubauncher.window.component
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -15,7 +15,7 @@ import androidx.compose.ui.unit.dp
 import ua.besf0r.cubauncher.settingsManager
 
 @Composable
-fun circularCheckbox(
+fun CircularCheckbox(
     modifier: Modifier = Modifier,
     checked: Boolean,
     onCheckedChange: (Boolean) -> Unit

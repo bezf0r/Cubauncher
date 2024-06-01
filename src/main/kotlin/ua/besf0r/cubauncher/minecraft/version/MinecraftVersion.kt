@@ -12,6 +12,7 @@ import kotlinx.serialization.json.*
 @Serializable
 data class MinecraftVersion (
     var arguments: MinecraftArguments? = null,
+    var minecraftArguments: String? = null,
     var assetIndex: AssetIndex? = null,
     var assets: String? = null,
     var complianceLevel: Int? = null,
@@ -23,10 +24,6 @@ data class MinecraftVersion (
     var time: String?= null,
     var type: String? = null,
     var mainClass: String? = null,
-    @Transient
-    var logging: Any? = null,
-    @Transient
-    var minimumLauncherVersion: Any? = null
 )
 @Serializable
 data class MinecraftArguments(
