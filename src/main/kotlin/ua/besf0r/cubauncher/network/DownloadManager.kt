@@ -80,7 +80,7 @@ class DownloadManager(
             return hexString.toString()
         }
 
-        private fun shouldDownloadFile(
+        fun shouldDownloadFile(
             sha1: String?,
             saveAs: Path
         ): Boolean {

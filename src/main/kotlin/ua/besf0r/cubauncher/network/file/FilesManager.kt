@@ -3,6 +3,7 @@ package ua.besf0r.cubauncher.network.file
 import java.io.IOException
 import java.nio.file.*
 import java.nio.file.attribute.BasicFileAttributes
+import kotlin.io.path.createFile
 
 object FilesManager {
     private val deleteVisitor = object : SimpleFileVisitor<Path>() {
@@ -34,7 +35,7 @@ object FilesManager {
     @Throws(IOException::class)
     fun Path.createFileIfNotExists() {
         if (!Files.exists(this)) {
-            Files.createFile(this)
+            this.createFile()
         }
     }
 

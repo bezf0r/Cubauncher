@@ -1,8 +1,9 @@
-import org.jetbrains.compose.desktop.application.dsl.TargetFormat
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
-    kotlin("jvm") version "1.9.22"
-    id("org.jetbrains.compose") version "1.6.2"
+    kotlin("jvm") version "2.0.0"
+    id("org.jetbrains.kotlin.plugin.compose") version "2.0.0"
+    id("org.jetbrains.compose") version "1.6.20-dev1667"
     kotlin("plugin.serialization") version "1.9.10"
 }
 
@@ -25,7 +26,6 @@ dependencies {
     implementation("io.ktor:ktor-client-core:2.3.9")
     implementation("io.ktor:ktor-client-cio:2.3.9")
     implementation("io.ktor:ktor-client-content-negotiation:2.3.9")
-    implementation("media.kamel:kamel-image:0.9.4")
 
     implementation("org.apache.commons:commons-text:1.11.0")
     implementation("net.java.dev.jna:jna-platform:4.0.0")
@@ -43,7 +43,6 @@ compose.desktop {
     application {
         mainClass = "ua.besf0r.cubauncher.MainKt"
         nativeDistributions {
-            targetFormats(TargetFormat.Exe, TargetFormat.Msi, TargetFormat.Deb)
             packageName = "Cubauncher"
             packageVersion = "1.0.0"
 
@@ -53,6 +52,12 @@ compose.desktop {
         fromFiles(obfuscate.get().outputs.files.asFileTree)
         mainJar.set(tasks.jar.map { RegularFile { mapObfuscatedJarFile(it.archiveFile.get().asFile) } })
     }
+}
+tasks.withType<KotlinCompile>{
+    kotlinOptions.jvmTarget = "11"
+}
+tasks.withType<JavaCompile>{
+    options.release = 11
 }
 
 obfuscate.configure {
@@ -65,7 +70,9 @@ obfuscate.configure {
         outjars(mapObfuscatedJarFile(file))
     }
 
-    libraryjars("${compose.desktop.application.javaHome ?: System.getProperty("java.home")}/jmods")
+    libraryjars("${compose.desktop.application.javaHome}/jmods")
 
     configuration("proguard-rules.pro")
 }
+
+

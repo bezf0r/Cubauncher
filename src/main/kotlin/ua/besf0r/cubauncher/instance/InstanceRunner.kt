@@ -1,7 +1,6 @@
 package ua.besf0r.cubauncher.instance
 
 import androidx.compose.runtime.*
-import io.kamel.core.utils.File
 import kotlinx.coroutines.*
 import org.apache.commons.text.StringSubstitutor
 import ua.besf0r.cubauncher.*

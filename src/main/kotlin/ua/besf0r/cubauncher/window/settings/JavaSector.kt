@@ -29,7 +29,7 @@ import kotlin.math.roundToInt
 fun JavaSector(){
     val mb = 1024 * 1024
     val memorySize = remember {
-        (ManagementFactory.getOperatingSystemMXBean() as OperatingSystemMXBean).totalMemorySize / mb
+        (ManagementFactory.getOperatingSystemMXBean() as OperatingSystemMXBean).totalPhysicalMemorySize / mb
     }
 
     val settings = settingsManager.settings

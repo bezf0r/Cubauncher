@@ -16,20 +16,15 @@ import kotlin.coroutines.coroutineContext
 
 class AccountsManager(workDir: Path) {
     private val accountsFile: Path = workDir.resolve("accounts.json")
-    var accounts: MutableList<Account>
+    var accounts: MutableList<Account> = mutableListOf()
 
     private val json = Json {
         serializersModule = Account.accountModule
         ignoreUnknownKeys = true
     }
-
-    init {
-        accountsFile.createFileIfNotExists()
-        accounts = mutableListOf()
-    }
-
     @Throws(IOException::class)
     fun loadAccounts() {
+        accountsFile.createFileIfNotExists()
         try {
             val loadedAccounts = Json.decodeFromString<List<Account>>(
                 IOUtil.readUtf8String(accountsFile)

@@ -33,6 +33,8 @@ class InstanceManager(
         }
     }
 
+    private val json = Json { ignoreUnknownKeys = true }
+
     @Throws(IOException::class)
     fun loadInstances() {
         instances.clear()
@@ -46,7 +48,7 @@ class InstanceManager(
             val instanceFile = it.resolve("instance.json")
             if (!instanceFile.exists()) return@forEach
 
-            val instance = Json.decodeFromString<Instance>(
+            val instance = json.decodeFromString<Instance>(
                 IOUtil.readUtf8String(instanceFile.toPath()))
             instances.add(instance)
         }

@@ -5,13 +5,17 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.material.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.painter.BitmapPainter
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import ua.besf0r.cubauncher.settingsManager
+import ua.besf0r.cubauncher.window.component.AsyncImage
+import ua.besf0r.cubauncher.window.component.loadImageBitmap
 
 @Composable
 fun ChangeNameSector(
@@ -78,20 +82,16 @@ fun IconSector() {
         Box(
             modifier = Modifier
                 .requiredSize(size = 100.dp)
+                .background(color = settingsManager.settings.currentTheme.panelsColor)
         ) {
-            Box(
+            AsyncImage(
+                load = { loadImageBitmap("https://cdn.apexminecrafthosting.com/img/uploads/2021/12/06173101/crafting-table.png") },
+                painterFor = { remember { BitmapPainter(it) } },
+                "",
                 modifier = Modifier
-                    .requiredSize(size = 100.dp)
-                    .background(color = settingsManager.settings.currentTheme.panelsColor)
+                    .align(alignment = Alignment.Center)
+                    .requiredSize(size = 75.dp)
             )
-            //                    Image(
-            //                        painter = painterResource(id = R.drawable.minecrafticon2048x20483ifq7gy71),
-            //                        contentDescription = "minecraft-icon-2048x2048-3ifq7gy7 1",
-            //                        modifier = Modifier
-            //                            .align(alignment = Alignment.TopStart)
-            //                            .offset(x = 5.dp,
-            //                                y = 5.dp)
-            //                            .requiredSize(size = 90.dp))
         }
     }
 }

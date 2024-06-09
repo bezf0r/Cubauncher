@@ -13,17 +13,18 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.painter.BitmapPainter
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import io.kamel.image.KamelImage
-import io.kamel.image.asyncPainterResource
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
 import org.jetbrains.skiko.MainUIDispatcher
 import ua.besf0r.cubauncher.instance.Instance
 import ua.besf0r.cubauncher.instanceManager
 import ua.besf0r.cubauncher.settingsManager
+import ua.besf0r.cubauncher.window.component.AsyncImage
+import ua.besf0r.cubauncher.window.component.loadImageBitmap
 
 @Composable
 fun InstancesGrid() {
@@ -108,9 +109,10 @@ private fun InstanceGrid(
                             else Color(0xff464646)
                         )
                 ) {
-                    KamelImage(
-                        asyncPainterResource("https://cdn.apexminecrafthosting.com/img/uploads/2021/12/06173101/crafting-table.png"),
-                        contentDescription = "",
+                    AsyncImage(
+                        load = { loadImageBitmap("https://cdn.apexminecrafthosting.com/img/uploads/2021/12/06173101/crafting-table.png") },
+                        painterFor = { remember { BitmapPainter(it) } },
+                        "",
                         modifier = Modifier
                             .align(alignment = Alignment.Center)
                             .requiredSize(size = 45.dp)

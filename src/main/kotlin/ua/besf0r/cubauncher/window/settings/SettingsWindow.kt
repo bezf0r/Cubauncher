@@ -15,18 +15,20 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.graphics.painter.BitmapPainter
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.rememberWindowState
-import io.kamel.image.KamelImage
-import io.kamel.image.asyncPainterResource
 import ua.besf0r.cubauncher.account.AccountsUpdateEvent
 import ua.besf0r.cubauncher.accountsManager
 import ua.besf0r.cubauncher.laucnher.SettingsManager
 import ua.besf0r.cubauncher.settingsManager
+import ua.besf0r.cubauncher.window.component.AsyncImage
+import ua.besf0r.cubauncher.window.component.loadImageBitmap
 import ua.besf0r.cubauncher.window.createMainTitleBar
 import ua.besf0r.cubauncher.window.settings.account.AccountSector
 
@@ -43,6 +45,8 @@ fun SettingWindow(
     ) }
 
     Window(
+        icon = painterResource("logo.png"),
+        title = "Cubauncher (1.1-beta) - налаштування",
         state = windowState,
         resizable = false,
         undecorated = true,
@@ -109,14 +113,14 @@ fun SettingWindow(
                             .offset(x = 62.dp, y = 6.dp)
                             .wrapContentHeight(align = Alignment.CenterVertically)
                     )
-                    KamelImage(
-                        resource = asyncPainterResource("https://www.iconsdb.com/icons/preview/white/console-xxl.png"),
-                        contentDescription = "",
+                    AsyncImage(
+                        load = { loadImageBitmap("https://www.iconsdb.com/icons/preview/white/console-xxl.png") },
+                        painterFor = { remember { BitmapPainter(it) } },
+                        "",
                         modifier = Modifier
                             .align(alignment = Alignment.CenterStart)
                             .offset(x = 38.dp)
                             .requiredSize(size = 20.dp),
-                        colorFilter = ColorFilter.tint(settingsManager.settings.currentTheme.textColor)
                     )
                 }
             }
@@ -149,14 +153,14 @@ fun SettingWindow(
                             .offset(x = (-13.5).dp)
                             .wrapContentHeight(align = Alignment.CenterVertically)
                     )
-                    KamelImage(
-                        resource = asyncPainterResource("https://www.stimulsoft.com/images/products/reports-java/description/java.png"),
-                        contentDescription = "",
+                    AsyncImage(
+                        load = { loadImageBitmap("https://www.stimulsoft.com/images/products/reports-java/description/java.png") },
+                        painterFor = { remember { BitmapPainter(it) } },
+                        "",
                         modifier = Modifier
                             .align(alignment = Alignment.CenterStart)
                             .offset(x = 38.dp)
-                            .requiredSize(20.dp),
-                        colorFilter = ColorFilter.tint(settingsManager.settings.currentTheme.textColor)
+                            .requiredSize(20.dp)
                     )
                 }
             }

@@ -1,10 +1,7 @@
 package ua.besf0r.cubauncher.window.main
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.offset
-import androidx.compose.foundation.layout.requiredHeight
-import androidx.compose.foundation.layout.requiredWidth
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
@@ -18,14 +15,15 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.painter.BitmapPainter
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import io.kamel.image.KamelImage
-import io.kamel.image.asyncPainterResource
 import ua.besf0r.cubauncher.instance.InstanceRunner
 import ua.besf0r.cubauncher.instanceManager
 import ua.besf0r.cubauncher.settingsManager
+import ua.besf0r.cubauncher.window.component.AsyncImage
+import ua.besf0r.cubauncher.window.component.loadImageBitmap
 import ua.besf0r.cubauncher.workDir
 import java.awt.Desktop
 
@@ -44,10 +42,10 @@ fun LeftColumn() {
                 .requiredHeight(height = 156.dp)
                 .background(color = settingsManager.settings.currentTheme.panelsColor)
         )
-        KamelImage(
-            asyncPainterResource(data = "https://i.imgur.com/142KSyy.png"),
-            contentDescription = "Profile",
-            onLoading = { progress -> CircularProgressIndicator(progress) },
+        AsyncImage(
+            load = { loadImageBitmap("https://i.imgur.com/142KSyy.png") },
+            painterFor = { remember { BitmapPainter(it) } },
+            "",
             modifier = Modifier
                 .align(alignment = Alignment.TopStart)
                 .offset(x = 40.5.dp, y = 67.dp)

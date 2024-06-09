@@ -74,7 +74,7 @@ fun WindowTitleBar(
             }
         }
         Text(
-            text = "Cubauncher (1.0-beta)",
+            text = "Cubauncher (1.1-beta)",
             color = Color.White,
             style = TextStyle(fontSize = 12.sp),
             modifier = Modifier

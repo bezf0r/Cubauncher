@@ -8,6 +8,7 @@ import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Window
@@ -35,6 +36,8 @@ fun CreateInstanceWindow(
     val isDownloading = remember { mutableStateOf(false) }
 
     Window(
+        icon = painterResource("logo.png"),
+        title = "Cubauncher (1.1-beta) - створити збірку",
         state = windowState,
         resizable = false,
         undecorated = true,
