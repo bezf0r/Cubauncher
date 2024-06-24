@@ -26,14 +26,12 @@ import androidx.compose.ui.unit.sp
 import ua.besf0r.cubauncher.minecraft.downloadFiles
 import ua.besf0r.cubauncher.settingsManager
 import ua.besf0r.cubauncher.window.instance.create.CreateInstanceData
-import ua.besf0r.cubauncher.window.instance.create.CreateInstanceWindow
+import ua.besf0r.cubauncher.window.instance.create.InstanceWindow
 import ua.besf0r.cubauncher.window.settings.SettingWindow
 import ua.besf0r.cubauncher.window.settings.SettingsSection
 
 @Composable
-fun BottomColumn(
-    currentLog: MutableState<String>
-){
+fun BottomColumn(){
     Box(
         modifier = Modifier
             .requiredWidth(width = 720.dp)
@@ -56,7 +54,7 @@ fun BottomColumn(
                 .requiredWidth(width = 176.dp)
                 .requiredHeight(height = 30.dp)
         ) {
-            if (onNewInstance.value) CreateInstanceWindow(
+            if (onNewInstance.value) InstanceWindow(
                 onDismissed = {
                     onNewInstance.value = false
                 }, onDownload = { screenData: MutableState<CreateInstanceData> ->
@@ -108,9 +106,7 @@ fun BottomColumn(
                 .requiredHeight(height = 30.dp)
         ) {
             if (openSettingWindow.value)
-                SettingWindow(currentLog) {
-                    openSettingWindow.value = false
-                }
+                SettingWindow { openSettingWindow.value = false }
 
             Box(
                 modifier = Modifier
@@ -157,7 +153,7 @@ fun BottomColumn(
                 .requiredHeight(height = 30.dp)
         ) {
             if (onAccountSettingWindow.value)
-                SettingWindow(currentLog, SettingsSection.ACCOUNT){
+                SettingWindow(SettingsSection.ACCOUNT){
                     onAccountSettingWindow.value = false
                 }
 

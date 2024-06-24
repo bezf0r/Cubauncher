@@ -19,6 +19,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
+import ua.besf0r.cubauncher.Logger
 import ua.besf0r.cubauncher.account.microsoft.MicrosoftDeviceCode
 import ua.besf0r.cubauncher.account.microsoft.MicrosoftOAuthUtils
 import ua.besf0r.cubauncher.accountsManager
@@ -117,11 +118,11 @@ fun ParseMicrosoftAccountDialog(
             errorCallback = {},
             successCallback = {
                 onSuccess()
-                println("Авторизація успішна!")
+                Logger.publish("Авторизація успішна!")
 
                 MicrosoftOAuthUtils.loginToMicrosoftAccount(it) { account ->
                     accountsManager.createAccount(account)
-                    println("Успішний вхід для користувача: ${account.username}")
+                    Logger.publish("Успішний вхід для користувача: ${account.username}")
                 }
             }
         )

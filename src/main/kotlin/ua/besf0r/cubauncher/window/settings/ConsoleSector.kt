@@ -10,7 +10,8 @@ import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.material.Divider
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -19,9 +20,26 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.async
+import kotlinx.coroutines.launch
+import org.jetbrains.skiko.MainUIDispatcher
+import ua.besf0r.cubauncher.Logger
+import ua.besf0r.cubauncher.window.component.RenderAsync
 
 @Composable
-fun ConsoleSector(currentLog: MutableState<String>) {
+fun ConsoleSector() {
+    val logs = remember { mutableStateOf("") }
+
+    try {
+        Logger.subscribe {
+            CoroutineScope(MainUIDispatcher).async{
+                logs.value = it.joinToString("\n")
+            }
+        }
+    }catch (_: Exception){}
+
+
     Box(
         modifier = Modifier
             .offset(x = 195.dp)
@@ -57,7 +75,7 @@ fun ConsoleSector(currentLog: MutableState<String>) {
 
             SelectionContainer {
                 Text(
-                    text = currentLog.value,
+                    text = logs.value,
                     color = Color.White,
                     style = TextStyle(fontSize = 10.sp, fontWeight = FontWeight.Medium),
                     modifier = Modifier

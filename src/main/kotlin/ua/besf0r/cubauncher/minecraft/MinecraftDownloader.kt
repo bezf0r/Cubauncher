@@ -26,8 +26,7 @@ class MinecraftDownloader(
     private val minecraftDownloadListener: DownloadListener
 ) {
     private val resources = "https://resources.download.minecraft.net/"
-
-    private val allRuntimeUrl = "https://launchermeta.mojang.com/v1/products/java-runtime/2ec0cc96c44e5a76b9c8b7c39df7210883d12871/all.json";
+    private val allRuntimeUrl = "https://launchermeta.mojang.com/v1/products/java-runtime/2ec0cc96c44e5a76b9c8b7c39df7210883d12871/all.json"
 
     private var currentInstance: Instance? = null
 
@@ -58,7 +57,7 @@ class MinecraftDownloader(
             val endTime = System.currentTimeMillis()
             val duration = ((endTime - startTime).toInt())
 
-            println("Час завантаження - ${(duration / 60000).toDouble()} хв")
+            Logger.publish("Час завантаження - ${(duration.toDouble() / 60000.0)} хв")
         }.await()
     }
 
@@ -110,7 +109,7 @@ class MinecraftDownloader(
         versionInfo.libraries.forEach Library@{ library ->
             if (!currentJob.isActive) return@Library
 
-            if (!library.rules.applyOnThisPlatform())  return@Library
+            if (!library.rules.applyOnThisPlatform()) return@Library
 
             val downloads = library.downloads ?: return@Library
             val artifact = downloads.artifact
@@ -146,7 +145,7 @@ class MinecraftDownloader(
                 )
             }
         }
-        DownloadManager.executeMultiple(filesForDownload) { _, value: Long, size: Long ->
+        DownloadManager.executeMultiple(filesForDownload) {value: Long, size: Long ->
             minecraftDownloadListener.onProgress(value, size)
         }
 
@@ -237,7 +236,7 @@ class MinecraftDownloader(
                 DownloadManager.DownloadFile(url, asset.hash, asset.size, saveAs)
             )
         }
-        DownloadManager.executeMultiple(filesForDownload) { _, value: Long, size: Long ->
+        DownloadManager.executeMultiple(filesForDownload) { value: Long, size: Long ->
             minecraftDownloadListener.onProgress(value, size)
         }
     }
@@ -265,12 +264,13 @@ class MinecraftDownloader(
             ?: throw IllegalArgumentException("Expected runtime information not found for $jreOsName and $javaKey")
 
         val runtime = json.decodeFromString<List<JavaRuntime>>(osRuntime.jsonArray.toString())[0]
-
         val manifestFile = javaDir.resolve(javaKey).resolve("manifest.json")
+
         DownloadManager(
             fileUrl = runtime.manifest!!.url!!,
             saveAs = manifestFile
         ).execute(false){_,_ ->}
+
         val manifest = json.decodeFromString<JavaRuntimeManifest>(
             IOUtil.readUtf8String(manifestFile)
         )
@@ -290,7 +290,7 @@ class MinecraftDownloader(
             }
         }
 
-        DownloadManager.executeMultiple(files){ _, value: Long, size: Long ->
+        DownloadManager.executeMultiple(files){ value: Long, size: Long ->
             minecraftDownloadListener.onProgress(value, size)
         }
     }

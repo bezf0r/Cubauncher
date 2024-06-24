@@ -21,7 +21,7 @@ import ua.besf0r.cubauncher.versionsDir
 import ua.besf0r.cubauncher.window.createMainTitleBar
 
 @Composable
-fun CreateInstanceWindow(
+fun InstanceWindow(
     onDismissed: () -> Unit,
     onDownload: @Composable (MutableState<CreateInstanceData>) -> Unit
 ) {
@@ -64,9 +64,11 @@ data class CreateInstanceData(
     var selectedVersion: VersionManifest.Version? = null,
     var isRelease: Boolean = true,
     val modManager: ModificationManager = ModificationManager.WITHOUT,
-    val modManagerVersion: String = ""
+    val hasOptifine: Boolean = false,
+    val optifineVersion: String? = null,
+    val modManagerVersion: String? = null
 )
-enum class ModificationManager{ WITHOUT, FORGE, FABRIC }
+enum class ModificationManager{ WITHOUT, FORGE, FABRIC, QUILT }
 
 private fun versionType(screenData: MutableState<CreateInstanceData>) =
     if (screenData.value.isRelease) "release" else "snapshot"

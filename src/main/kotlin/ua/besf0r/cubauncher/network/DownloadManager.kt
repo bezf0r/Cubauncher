@@ -56,7 +56,6 @@ class DownloadManager(
         }
     }
 
-
     private fun createDirectoriesAndFile() {
         FilesManager.createDirectories(saveAs.parent)
         saveAs.createFileIfNotExists()
@@ -95,19 +94,25 @@ class DownloadManager(
         @Throws(IOException::class)
         fun executeMultiple(
             files: List<DownloadFile>,
-            downloadProgress: (String, Long, Long) -> Unit
+            downloadProgress: (Long, Long) -> Unit
         ) = runBlocking {
             val context = Executors.newFixedThreadPool(2).asCoroutineDispatcher()
 
             launch(context){
-                files.filter { shouldDownloadFile(it.sha1, it.saveAs) }.map { file ->
+                val total = files.sumOf { it.declaredSize }
+                var downloaded = 0L
+
+                val forDownload = files.filter { shouldDownloadFile(it.sha1, it.saveAs) }
+                files.filter { it !in forDownload }.map { downloaded += it.declaredSize }
+
+                forDownload.map { file ->
                     val downloadManager = DownloadManager(
                         file.url, file.sha1,
                         file.declaredSize, file.saveAs
                     )
-                    downloadManager.execute(false) { bytesSentTotal, totalSize ->
-                        downloadProgress(file.url, bytesSentTotal, totalSize)
-                    }
+                    downloadManager.execute(false) { _, _ -> }
+                    downloadProgress(downloaded, total)
+                    downloaded += file.declaredSize
                 }
             }
             context.close()

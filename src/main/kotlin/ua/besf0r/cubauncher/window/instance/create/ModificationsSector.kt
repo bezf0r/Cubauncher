@@ -19,16 +19,20 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import ua.besf0r.cubauncher.minecraft.fabric.version.FabricVersionManifest
-import ua.besf0r.cubauncher.minecraft.forge.version.ForgeVersionManifest
+import ua.besf0r.cubauncher.minecraft.fabric.FabricVersionManifest
+import ua.besf0r.cubauncher.minecraft.quilt.QuiltVersionManifest
+import ua.besf0r.cubauncher.minecraft.forge.ForgeVersionManifest
+import ua.besf0r.cubauncher.minecraft.optifine.OptiFineVersionManifest
 import ua.besf0r.cubauncher.settingsManager
 import ua.besf0r.cubauncher.window.component.CircularCheckbox
+import ua.besf0r.cubauncher.window.component.RenderAsync
 
 @Composable
 fun ChangeModsManagerSector(
     screenData: MutableState<CreateInstanceData>
 ) {
     val modManager = screenData.value.modManager
+    val modManagerVersion = screenData.value.modManagerVersion
     val selectedVersion = screenData.value.selectedVersion
 
     Box(
@@ -72,33 +76,74 @@ fun ChangeModsManagerSector(
                     .requiredHeight(height = 15.dp)
             )
 
-            when(modManager){
-                ModificationManager.WITHOUT -> {
-                    CreateModificationVersionsGrid(
-                        listOf(), screenData
-                    )
-                }
-                ModificationManager.FORGE -> {
-                    val forgeVersions = ForgeVersionManifest.versions.versions
-                    val versions = forgeVersions.find {
-                        it.first == selectedVersion?.id
-                    }?.second ?: listOf()
+            if (screenData.value.hasOptifine){
+                RenderAsync(
+                    load = Load@{
+                        val optifineVersions = OptiFineVersionManifest.versions
+                        return@Load optifineVersions
+                    },
+                    itemContent = Item@ { optifine ->
+                        val forCurrentVersion = optifine.filter { it.mcversion == selectedVersion?.id }
+                        if (forCurrentVersion.isEmpty()) return@Item
 
-                    CreateModificationVersionsGrid(
-                        versions.reversed(), screenData
+                        screenData.value = screenData.value.copy(optifineVersion = forCurrentVersion.last().filename )
+                    }
+                )
+            }else{
+                screenData.value = screenData.value.copy(optifineVersion = null)
+            }
+
+            when (modManager) {
+                ModificationManager.WITHOUT -> {
+                    ModificationVersionsGrid(listOf(), screenData)
+                }
+
+                ModificationManager.FORGE -> {
+                    RenderAsync(
+                        load = Load@{
+                            val forgeVersions = ForgeVersionManifest.versions.versions
+                            return@Load forgeVersions
+                        },
+                        itemContent = { forge ->
+                            ModificationVersionsGrid((forge.find {
+                                it.first == selectedVersion?.id
+                            }?.second ?: listOf()).reversed(), screenData)
+                        }
                     )
                 }
 
                 ModificationManager.FABRIC -> {
-                    val fabricVersions = FabricVersionManifest.loaderVersion
-                    val supportedVersions = FabricVersionManifest.minecraftVersions
+                    RenderAsync(
+                        load = Load@{
+                            val fabricVersions = FabricVersionManifest.loaderVersion
+                            val supportedVersions = FabricVersionManifest.minecraftVersions
 
-                    val versions = if (supportedVersions.find {
-                        it.version == selectedVersion?.id
-                    } == null) listOf() else fabricVersions
+                            return@Load Pair(fabricVersions, supportedVersions)
+                        },
+                        itemContent = { fabric ->
+                            val supportedVersions = fabric.second
+                            val fabricVersions =
+                                if (supportedVersions.find { it.version == selectedVersion?.id } == null) listOf() else fabric.first
 
-                    CreateModificationVersionsGrid(
-                        versions.map { it.version }, screenData
+                            ModificationVersionsGrid(fabricVersions.map { it.version }, screenData)
+                        }
+                    )
+                }
+                ModificationManager.QUILT -> {
+                    RenderAsync(
+                        load = Load@{
+                            val fabricVersions = QuiltVersionManifest.loaderVersion
+                            val supportedVersions = QuiltVersionManifest.minecraftVersions
+
+                            return@Load Pair(fabricVersions, supportedVersions)
+                        },
+                        itemContent = { quilt ->
+                            val supportedVersions = quilt.second
+                            val quiltVersions =
+                                if (supportedVersions.find { it.version == selectedVersion?.id } == null) listOf() else quilt.first
+
+                            ModificationVersionsGrid(quiltVersions.map { it.version }, screenData)
+                        }
                     )
                 }
             }
@@ -194,13 +239,86 @@ fun ChangeModsManagerSector(
                         .requiredHeight(height = 20.dp)
                 )
             }
+            Box(
+                modifier = Modifier
+                    .align(alignment = Alignment.TopStart)
+                    .offset(y = 106.dp)
+                    .requiredWidth(width = 162.dp)
+                    .requiredHeight(height = 20.dp)
+            ) {
+                CircularCheckbox(
+                    checked = modManager == ModificationManager.QUILT,
+                    onCheckedChange = {
+                        screenData.value = screenData.value.copy(modManager = ModificationManager.QUILT)
+                    },
+                    modifier = Modifier.align(alignment = Alignment.CenterStart)
+                )
+                Text(
+                    text = "Quilt",
+                    color = Color.White,
+                    style = TextStyle(
+                        fontSize = 15.sp),
+                    modifier = Modifier
+                        .align(alignment = Alignment.TopStart)
+                        .offset(x = 23.dp,
+                            y = 0.dp)
+                        .requiredWidth(width = 139.dp)
+                        .requiredHeight(height = 17.dp))
+            }
+            Box(
+                modifier = Modifier
+                    .align(alignment = Alignment.TopStart)
+                    .offset(x = 79.dp, y = 53.dp)
+                    .requiredWidth(width = 59.dp)
+                    .requiredHeight(height = 20.dp)
+            ) {
+                CircularCheckbox(
+                    checked = screenData.value.hasOptifine,
+                    onCheckedChange = {
+                        screenData.value = screenData.value.copy(
+                            hasOptifine = !screenData.value.hasOptifine
+                        )
+                    },
+                    modifier = Modifier.align(alignment = Alignment.CenterStart)
+                )
+                Text(
+                    text = "Optifine",
+                    color = run Color@ {
+                        var color = Color.White
+                        RenderAsync(
+                            load = Load@{
+                                val optifineVersions = OptiFineVersionManifest.versions
+                                return@Load optifineVersions
+                            },
+                            itemContent = Item@ { optifine ->
+                                val forCurrentVersion = optifine.filter { it.mcversion == selectedVersion?.id }
+                                if (modManager != ModificationManager.FORGE ||
+                                    forCurrentVersion.isEmpty() ||
+                                    modManagerVersion == null
+                                ) {
+                                    color = Color.Gray
+                                    return@Item
+                                }
+                                color = Color.White
+                            }
+                        )
+                        return@Color color
+                    },
+                    style = TextStyle(fontSize = 15.sp),
+                    modifier = Modifier
+                        .align(alignment = Alignment.CenterStart)
+                        .offset(x = 60.dp)
+                        .requiredWidth(width = 139.dp)
+                        .requiredHeight(height = 20.dp))
+            }
         }
     }
 }
 @Composable
-fun CreateModificationVersionsGrid(
+fun ModificationVersionsGrid(
     versions: List<String>,
-    screenData: MutableState<CreateInstanceData>
+    screenData: MutableState<CreateInstanceData>,
+    onCustomValue: ((name: String) -> Unit)? = null
 ) {
     val modManagerVersion = screenData.value.modManagerVersion
 
@@ -212,7 +330,8 @@ fun CreateModificationVersionsGrid(
             items(versions) {
                 TextButton(
                     onClick = {
-                        screenData.value = screenData.value.copy(modManagerVersion = it)
+                        if (onCustomValue != null) onCustomValue(it)
+                        else screenData.value = screenData.value.copy(modManagerVersion = it)
                     },
                     colors = ButtonDefaults.buttonColors(
                         backgroundColor = if (modManagerVersion == it)
@@ -221,12 +340,12 @@ fun CreateModificationVersionsGrid(
                     ),
                     modifier = Modifier
                         .requiredWidth(width = 191.dp)
-                        .requiredHeight(height = 15.dp)
+                        .requiredHeight(height = 17.dp)
                 ) {
                     Box(
                         modifier = Modifier
                             .requiredWidth(width = 191.dp)
-                            .requiredHeight(height = 15.dp)
+                            .requiredHeight(height = 17.dp)
                     ) {
                         Text(
                             text = it,

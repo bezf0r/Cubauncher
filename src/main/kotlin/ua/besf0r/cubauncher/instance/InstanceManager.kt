@@ -69,7 +69,7 @@ class InstanceManager(
         val instanceDir = getInstanceDir(instance)
         if (!instanceDir.exists()) return
         val instanceFile = instanceDir.resolve("instance.json")
-        IOUtil.writeUtf8String(instanceFile, Json.encodeToString<Instance>(instance))
+        IOUtil.writeUtf8String(instanceFile, Json.encodeToString(instance))
     }
 
     @Throws(IOException::class)

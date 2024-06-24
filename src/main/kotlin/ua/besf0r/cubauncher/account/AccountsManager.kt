@@ -68,17 +68,16 @@ object AccountsUpdateEvent {
     private val _events = MutableSharedFlow<List<Account>>()
     private val events = _events.asSharedFlow()
 
-    fun publish(event: List<Account>) {
-        CoroutineScope(Dispatchers.IO).launch { _events.emit(event) }
+    fun publish(event: List<Account>) = CoroutineScope(Dispatchers.IO).launch {
+        _events.emit(event)
     }
 
-    fun subscribe(onEvent: (List<Account>) -> Unit) {
-        CoroutineScope(Dispatchers.IO).launch {
-            events.filterIsInstance<List<Account>>()
-                .collectLatest { event ->
-                    coroutineContext.ensureActive()
-                    withContext(MainUIDispatcher){ onEvent(event) }
-                }
-        }
+
+    fun subscribe(onEvent: (List<Account>) -> Unit) = CoroutineScope(Dispatchers.IO).launch {
+        events.filterIsInstance<List<Account>>()
+            .collectLatest { event ->
+                coroutineContext.ensureActive()
+                withContext(MainUIDispatcher){ onEvent(event) }
+            }
     }
 }

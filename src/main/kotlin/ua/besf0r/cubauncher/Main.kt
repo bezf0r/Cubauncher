@@ -4,9 +4,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.MutableState
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.DpSize
@@ -24,7 +21,6 @@ import kotlinx.coroutines.withContext
 import ua.besf0r.cubauncher.account.AccountsManager
 import ua.besf0r.cubauncher.instance.InstanceManager
 import ua.besf0r.cubauncher.laucnher.SettingsManager
-import ua.besf0r.cubauncher.laucnher.logger.LoggerManager.runLogger
 import ua.besf0r.cubauncher.minecraft.version.VersionList
 import ua.besf0r.cubauncher.network.file.FilesManager
 import ua.besf0r.cubauncher.network.file.UpdaterManager
@@ -55,21 +51,18 @@ val instanceManager = InstanceManager(instancesDir)
 val settingsManager = SettingsManager(settingsFile)
 
 @Composable
-fun App(currentLog: MutableState<String>) {
+fun App() {
     Box(modifier = Modifier
         .fillMaxSize()
         .background(settingsManager.settings.currentTheme.fontColor)
     ) {
         LeftColumn()
-        BottomColumn(currentLog)
+        BottomColumn()
         InstancesGrid()
     }
 }
 
 fun main() = application {
-    val currentLog = remember { mutableStateOf("") }
-    runLogger(currentLog)
-
     loadMainData()
 
     val windowState = rememberWindowState(size = DpSize(720.dp, 512.dp))
@@ -81,7 +74,7 @@ fun main() = application {
         undecorated = true,
         onCloseRequest = { onDisable() }
     ) {
-        App(currentLog)
+        App()
 
         createMainTitleBar(windowState){ onDisable() }
     }
@@ -95,7 +88,7 @@ private fun ApplicationScope.onDisable() {
 
 private fun loadMainData() = runBlocking {
     withContext(Dispatchers.IO) {
-        UpdaterManager.checkForUpdates()
+        //UpdaterManager.checkForUpdates()
 
         FilesManager.createDirectories(
             workDir, assetsDir, librariesDir, versionsDir, javaDir

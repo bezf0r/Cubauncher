@@ -6,7 +6,10 @@ import kotlinx.serialization.builtins.serializer
 import kotlinx.serialization.descriptors.*
 import kotlinx.serialization.encoding.*
 import kotlinx.serialization.json.Json
-import ua.besf0r.cubauncher.minecraft.forge.ForgeProfile
+import ua.besf0r.cubauncher.minecraft.forge.newprofile.NewForgeProfile
+import ua.besf0r.cubauncher.minecraft.forge.newprofile.NewProfilePathSerializer
+import ua.besf0r.cubauncher.minecraft.forge.oldprofile.OldForgeProfile
+import ua.besf0r.cubauncher.minecraft.forge.oldprofile.OldProfilePathSerializer
 import ua.besf0r.cubauncher.minecraft.version.MinecraftVersion
 import ua.besf0r.cubauncher.network.file.IOUtil
 import ua.besf0r.cubauncher.versionsDir
@@ -24,12 +27,15 @@ class Instance(
     @Serializable(MinecraftVersionSerializer::class)
     var versionInfo: MinecraftVersion? = null
 
-    var forge: ForgeProfile? = null
-    @Serializable(PathListSerializer::class)
-    var forgeLibraries: MutableList<Path> = mutableListOf()
+    @Serializable(with = OldProfilePathSerializer::class)
+    var oldForgeProfile: OldForgeProfile.VersionInfo? = null
+    @Serializable(with = NewProfilePathSerializer::class)
+    var newForgeProfile: NewForgeProfile? = null
 
     @Serializable(PathListSerializer::class)
     var fabricLibraries: MutableList<Path> = mutableListOf()
+    @Serializable(PathListSerializer::class)
+    var quiltLibraries: MutableList<Path> = mutableListOf()
 }
 object PathListSerializer : KSerializer<MutableList<Path>> {
     override val descriptor: SerialDescriptor = ListSerializer(String.serializer()).descriptor

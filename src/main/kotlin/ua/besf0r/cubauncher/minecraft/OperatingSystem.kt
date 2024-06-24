@@ -6,20 +6,18 @@ import ua.besf0r.cubauncher.javaDir
 import ua.besf0r.cubauncher.minecraft.version.MinecraftVersion
 import ua.besf0r.cubauncher.minecraft.version.Rule
 import java.util.*
+import kotlin.io.path.notExists
 import kotlin.io.path.pathString
 
 
 enum class OperatingSystem {
     @SerialName("windows")
     WINDOWS,
-
     @SerialName("linux")
     LINUX,
-
     @SerialName("osx")
     MACOS,
     SOLARIS,
-
     @SerialName("unknown")
     UNKNOWN;
 
@@ -83,6 +81,22 @@ enum class OperatingSystem {
         }
 
         var javaType: String = if (oS == WINDOWS) "javaw.exe" else "java"
+
+        val java17OrMore = Java@ {
+            var componentDir = javaDir.resolve("java-runtime-gamma")
+
+            if (componentDir.notExists()) return@Java javaType
+
+            if (OperatingSystem.oS == MACOS) {
+                componentDir = componentDir.resolve("jre.bundle")
+                    .resolve("Contents").resolve("Home")
+            }
+
+            return@Java componentDir
+                .resolve("bin")
+                .resolve(javaType)
+                .pathString
+        }
 
         fun List<Rule>?.applyOnThisPlatform(): Boolean {
             var lastAction = Rule.Action.DISALLOW

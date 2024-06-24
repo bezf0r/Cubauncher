@@ -12,6 +12,7 @@ import kotlinx.coroutines.*
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
+import ua.besf0r.cubauncher.Logger
 import ua.besf0r.cubauncher.account.Account
 import ua.besf0r.cubauncher.account.MicrosoftAccount
 import java.util.concurrent.TimeoutException
@@ -41,7 +42,7 @@ object MicrosoftOAuthUtils {
             val deviceCodeDeferred = async { obtainDeviceCode() }
             val deviceCode = deviceCodeDeferred.await() ?: return@launch
 
-            println("Obtained device code: ${deviceCode.userCode}")
+            Logger.publish("Код авторизації Microsoft: ${deviceCode.userCode}")
             deviceCodeCallback(deviceCode)
             currentCallBack = deviceCode
 
@@ -53,14 +54,16 @@ object MicrosoftOAuthUtils {
                     val response = responseDeferred.await()
                     val time = System.currentTimeMillis() / 1000
                     if (time > start + MAX_CHECK_TIME) {
-                        throw TimeoutException("Could not obtain access for device code: ${deviceCode.userCode}")
+                        throw TimeoutException("Час вийшов,не вдалося успішно авторизуватися: ${deviceCode.userCode}").apply {
+                            Logger.publish(stackTraceToString())
+                        }
                     }
 
                     if (response == null) {
                         delay(deviceCode.interval * 1000L)
                         checkToken()
                     } else {
-                        println("Code (${deviceCode.userCode}) is valid, logging in...")
+                        Logger.publish("Код (${deviceCode.userCode}) успішно авторизований, заходимо в аккаунт ...")
                         successCallback(response)
                     }
                 } catch (exception: Throwable) {
@@ -137,7 +140,7 @@ object MicrosoftOAuthUtils {
         onLogin: (Account) -> Unit
     ) {
        runBlocking {
-           println("Logging into microsoft account...")
+           Logger.publish("Авторизація в Microsoft аккаунт...")
 
            val msaTokens = response.saveTokens()
            val xboxLiveToken = getXboxLiveToken(msaTokens) ?: return@runBlocking

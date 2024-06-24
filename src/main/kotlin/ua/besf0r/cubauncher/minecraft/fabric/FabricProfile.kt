@@ -4,52 +4,28 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class FabricProfile(
-    val intermediary: Intermediary,
-    val loader: Loader,
-    val launcherMeta: LauncherMeta
+    val arguments: Arguments,
+    val id: String,
+    val inheritsFrom: String,
+    val libraries: List<Library>,
+    val mainClass: String,
+    val releaseTime: String,
+    val time: String,
+    val type: String
 ){
     @Serializable
-    data class Intermediary(
-        val maven: String,
-        val stable: Boolean,
-        val version: String
+    data class Arguments(
+        val game: List<String>,
+        val jvm: List<String>
     )
     @Serializable
-    data class Loader(
-        val build: Int,
-        val maven: String,
-        val separator: String,
-        val stable: Boolean,
-        val version: String
+    data class Library(
+        val md5: String? = null,
+        val name: String,
+        val sha1: String? = null,
+        val sha256: String? = null,
+        val sha512: String? = null,
+        val size: Int? = null,
+        val url: String
     )
-    @Serializable
-    data class LauncherMeta(
-        val mainClass: MainClass,
-        val min_java_version: Int,
-        val version: Int,
-        val libraries: Libraries
-    ){
-        @Serializable
-        data class MainClass(
-            val client: String,
-            val server: String
-        )
-        @Serializable
-        data class Libraries(
-            val client: List<Common>,
-            val common: List<Common>,
-            val development: List<Common>,
-            val server: List<Common>
-        )
-        @Serializable
-        data class Common(
-            val md5: String,
-            val name: String,
-            val sha1: String,
-            val sha256: String,
-            val sha512: String,
-            val size: Int,
-            val url: String
-        )
-    }
 }

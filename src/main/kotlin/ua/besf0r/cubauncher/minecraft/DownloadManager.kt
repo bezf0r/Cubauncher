@@ -4,13 +4,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.*
 import ua.besf0r.cubauncher.instanceManager
-import ua.besf0r.cubauncher.minecraft.fabric.FabricDownloader
-import ua.besf0r.cubauncher.minecraft.forge.ForgeDownloader
+import ua.besf0r.cubauncher.minecraft.fabric.FabricInstaller
+import ua.besf0r.cubauncher.minecraft.quilt.QuiltInstaller
+import ua.besf0r.cubauncher.minecraft.forge.ForgeInstaller
+import ua.besf0r.cubauncher.minecraft.optifine.OptiFineInstaller
 import ua.besf0r.cubauncher.network.DownloadListener
 import ua.besf0r.cubauncher.window.alert.ProgressAlert
 import ua.besf0r.cubauncher.window.instance.create.CreateInstanceData
@@ -31,20 +30,17 @@ fun downloadFiles(
 
     val downloadListener =
         object : DownloadListener {
-            override fun onStageChanged(stage: String) {
-                rememberStage.value = stage
-                println(stage)
-            }
-
+            override fun onStageChanged(stage: String) { rememberStage.value = stage }
             override fun onProgress(value: Long, size: Long) {
-                if (value == 0L) return
-                val perRate = size % 100
-                if (perRate == 0L) return
-                rememberRate.value = ((value % perRate).toInt())
+                try {
+                    val perPercent = size / 100
+                    rememberRate.value = (value / perPercent).toInt()
+                }catch (_: Exception){}
             }
         }
 
     val currentJob = CoroutineScope(Job())
+
 
     val minecraftDownloader = MinecraftDownloader(currentJob, downloadListener)
 
@@ -69,15 +65,29 @@ fun downloadFiles(
             }
 
             if (modManager == ModificationManager.FORGE) {
-                ForgeDownloader().download(
+                if (modManagerVersion != null)
+                ForgeInstaller().download(
                     downloadListener, modManagerVersion, instance
                 )
+                if (screenData.value.hasOptifine) {
+                    val optifineVersion = screenData.value.optifineVersion
+                    if (optifineVersion != null)
+                        OptiFineInstaller().download(downloadListener,optifineVersion,instance)
+                }
             }
             if (modManager == ModificationManager.FABRIC){
-                FabricDownloader().download(
+                if (modManagerVersion != null)
+                FabricInstaller().download(
                     downloadListener,modManagerVersion,instance
                 )
             }
+            if (modManager == ModificationManager.QUILT){
+                if (modManagerVersion != null)
+                    QuiltInstaller().download(
+                        downloadListener,modManagerVersion,instance
+                    )
+            }
+
 
             instanceManager.update(instance)
             isDismiss.value = false

@@ -1,17 +1,19 @@
-package ua.besf0r.cubauncher.minecraft.forge
+package ua.besf0r.cubauncher.minecraft.forge.newprofile
 
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.Transient
 
+
+//For Forge 1.12.2+
 @Serializable
-data class ForgeProfile(
+data class NewForgeProfile(
     val id: String? = null,
     val releaseTime: String? = null,
     val mainClass: String? = null,
     val libraries: List<Library>? = null,
     val type: String? = null,
     val inheritsFrom: String? = null,
-    val arguments: ForgeArguments? = null
+    val arguments: ForgeArguments? = null,
+    val minecraftArguments: String? = null
 ){
     @Serializable
     data class Library(
@@ -37,17 +39,10 @@ data class ForgeProfile(
         val jvm: List<String> = listOf()
     )
 
-    fun generateArguments(): List<String>{
-        return listOf(
-            "--launchTarget",
-            "forge_client",
-            "--fml.forgeVersion",
-            id!!.removePrefix("${inheritsFrom!!}-forge"),
-            "--fml.mcVersion",
-            inheritsFrom,
-            "--fml.forgeGroup",
-            "net.minecraftforge"
-        )
+    val gameArguments = mutableListOf<String>().apply {
+        addAll(arguments?.game ?: mutableListOf())
+        minecraftArguments?.let { add(it) }
     }
+    val jvmArguments =  arguments?.jvm?: mutableListOf()
 }
 

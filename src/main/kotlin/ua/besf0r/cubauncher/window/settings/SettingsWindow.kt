@@ -34,7 +34,6 @@ import ua.besf0r.cubauncher.window.settings.account.AccountSector
 
 @Composable
 fun SettingWindow(
-    currentLog: MutableState<String>,
     currentSelection: SettingsSection? = null,
     onDismiss: () -> Unit,
 ) {
@@ -205,7 +204,7 @@ fun SettingWindow(
         }
         when (selectedSection.value) {
             SettingsSection.CONSOLE -> {
-                ConsoleSector(currentLog)
+                ConsoleSector()
             }
 
             SettingsSection.JAVA -> {
