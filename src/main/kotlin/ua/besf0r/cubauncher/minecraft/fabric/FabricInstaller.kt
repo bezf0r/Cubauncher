@@ -3,22 +3,13 @@ package ua.besf0r.cubauncher.minecraft.fabric
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
 import kotlinx.coroutines.*
-import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import ua.besf0r.cubauncher.*
 import ua.besf0r.cubauncher.instance.Instance
-import ua.besf0r.cubauncher.minecraft.OperatingSystem
 import ua.besf0r.cubauncher.network.DownloadListener
 import ua.besf0r.cubauncher.network.DownloadManager
-import ua.besf0r.cubauncher.network.DownloadManager.Companion.downloadDataList
 import ua.besf0r.cubauncher.network.file.FilesManager.createDirectoryIfNotExists
 import ua.besf0r.cubauncher.network.file.MavenUtil.createUrl
-import java.io.BufferedReader
-import java.io.InputStreamReader
-import java.nio.charset.StandardCharsets
-import java.nio.file.Path
-import kotlin.io.path.absolutePathString
-import kotlin.io.path.deleteIfExists
 
 class FabricInstaller {
     private val json = Json { ignoreUnknownKeys = true }
@@ -50,7 +41,7 @@ class FabricInstaller {
                     saveAs = path,
                     declaredSize = (it.size ?: 0).toLong()
                 ))
-                instance.quiltLibraries.add(path)
+                instance.customLibraries.add(path)
             }
             DownloadManager.executeMultiple(libraries){ value: Long, size: Long ->
                 progress.onProgress(value, size)

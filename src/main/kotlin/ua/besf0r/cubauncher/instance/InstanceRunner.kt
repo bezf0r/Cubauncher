@@ -52,8 +52,8 @@ class InstanceRunner(private val instance: Instance){
             classpath.add(librariesDir.resolve(MavenUtil.createUrl(it.name)).pathString)
         }
 
-        instance.fabricLibraries.forEach { classpath.add(it.pathString) }
-        instance.quiltLibraries.forEach { classpath.add(it.pathString)  }
+        instance.customLibraries.forEach { classpath.add(it.pathString) }
+        instance.customLibraries.forEach { classpath.add(it.pathString)  }
 
         instance.versionInfo!!.libraries.mapNotNull {
             it.downloads?.artifact?.path?.let { path ->
@@ -128,6 +128,9 @@ class InstanceRunner(private val instance: Instance){
         }
         instance.oldForgeProfile?.minecraftArguments?.let {
             arguments.add(substitutor.replace(it))
+        }
+        instance.liteLoaderProfile?.tweakers?.forEach {
+            arguments.add("--tweakClass $it")
         }
 
         listOf(

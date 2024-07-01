@@ -251,6 +251,8 @@ class MinecraftDownloader(
         val jreOsName = OperatingSystem.jreOsName
         val javaKey = OperatingSystem.getJavaKey(version)
 
+        if (javaKey == "java-runtime-gamma") return
+
         DownloadManager(
             fileUrl = allRuntimeUrl,
             saveAs = runtimesFile

@@ -19,10 +19,12 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import ua.besf0r.cubauncher.minecraft.fabric.FabricVersionManifest
-import ua.besf0r.cubauncher.minecraft.quilt.QuiltVersionManifest
-import ua.besf0r.cubauncher.minecraft.forge.ForgeVersionManifest
-import ua.besf0r.cubauncher.minecraft.optifine.OptiFineVersionManifest
+import ua.besf0r.cubauncher.minecraft.fabric.FabricManifest
+import ua.besf0r.cubauncher.minecraft.quilt.QuiltManifest
+import ua.besf0r.cubauncher.minecraft.forge.ForgeManifest
+import ua.besf0r.cubauncher.minecraft.liteloader.LiteLoaderInstaller
+import ua.besf0r.cubauncher.minecraft.liteloader.LiteLoaderManifest
+import ua.besf0r.cubauncher.minecraft.optifine.OptiFineManifest
 import ua.besf0r.cubauncher.settingsManager
 import ua.besf0r.cubauncher.window.component.CircularCheckbox
 import ua.besf0r.cubauncher.window.component.RenderAsync
@@ -79,7 +81,7 @@ fun ChangeModsManagerSector(
             if (screenData.value.hasOptifine){
                 RenderAsync(
                     load = Load@{
-                        val optifineVersions = OptiFineVersionManifest.versions
+                        val optifineVersions = OptiFineManifest.versions
                         return@Load optifineVersions
                     },
                     itemContent = Item@ { optifine ->
@@ -101,7 +103,7 @@ fun ChangeModsManagerSector(
                 ModificationManager.FORGE -> {
                     RenderAsync(
                         load = Load@{
-                            val forgeVersions = ForgeVersionManifest.versions.versions
+                            val forgeVersions = ForgeManifest.versions.versions
                             return@Load forgeVersions
                         },
                         itemContent = { forge ->
@@ -115,8 +117,8 @@ fun ChangeModsManagerSector(
                 ModificationManager.FABRIC -> {
                     RenderAsync(
                         load = Load@{
-                            val fabricVersions = FabricVersionManifest.loaderVersion
-                            val supportedVersions = FabricVersionManifest.minecraftVersions
+                            val fabricVersions = FabricManifest.loaderVersion
+                            val supportedVersions = FabricManifest.minecraftVersions
 
                             return@Load Pair(fabricVersions, supportedVersions)
                         },
@@ -132,8 +134,8 @@ fun ChangeModsManagerSector(
                 ModificationManager.QUILT -> {
                     RenderAsync(
                         load = Load@{
-                            val fabricVersions = QuiltVersionManifest.loaderVersion
-                            val supportedVersions = QuiltVersionManifest.minecraftVersions
+                            val fabricVersions = QuiltManifest.loaderVersion
+                            val supportedVersions = QuiltManifest.minecraftVersions
 
                             return@Load Pair(fabricVersions, supportedVersions)
                         },
@@ -143,6 +145,19 @@ fun ChangeModsManagerSector(
                                 if (supportedVersions.find { it.version == selectedVersion?.id } == null) listOf() else quilt.first
 
                             ModificationVersionsGrid(quiltVersions.map { it.version }, screenData)
+                        }
+                    )
+                }
+                ModificationManager.LITE_LOADER -> {
+                    RenderAsync(
+                        load = Load@{
+                            return@Load LiteLoaderManifest.versions
+                        },
+                        itemContent = { liteLoader ->
+                            ModificationVersionsGrid(liteLoader
+                                .filter { it.inheritsFrom == selectedVersion?.id }
+                                .map { it.version }
+                            , screenData)
                         }
                     )
                 }
@@ -260,8 +275,7 @@ fun ChangeModsManagerSector(
                         fontSize = 15.sp),
                     modifier = Modifier
                         .align(alignment = Alignment.TopStart)
-                        .offset(x = 23.dp,
-                            y = 0.dp)
+                        .offset(x = 23.dp)
                         .requiredWidth(width = 139.dp)
                         .requiredHeight(height = 17.dp))
             }
@@ -287,7 +301,7 @@ fun ChangeModsManagerSector(
                         var color = Color.White
                         RenderAsync(
                             load = Load@{
-                                val optifineVersions = OptiFineVersionManifest.versions
+                                val optifineVersions = OptiFineManifest.versions
                                 return@Load optifineVersions
                             },
                             itemContent = Item@ { optifine ->
@@ -310,6 +324,33 @@ fun ChangeModsManagerSector(
                         .offset(x = 60.dp)
                         .requiredWidth(width = 139.dp)
                         .requiredHeight(height = 20.dp))
+            }
+            Box(
+                modifier = Modifier
+                    .align(alignment = Alignment.TopStart)
+                    .offset(x = 0.dp,
+                        y = 130.dp)
+                    .requiredWidth(width = 162.dp)
+                    .requiredHeight(height = 17.dp)
+            ) {
+                CircularCheckbox(
+                    checked = modManager == ModificationManager.LITE_LOADER,
+                    onCheckedChange = {
+                        screenData.value = screenData.value.copy(modManager = ModificationManager.LITE_LOADER)
+                    },
+                    modifier = Modifier.align(alignment = Alignment.CenterStart)
+                )
+                Text(
+                    text = "Liteloader",
+                    color = Color.White,
+                    style = TextStyle(
+                        fontSize = 15.sp),
+                    modifier = Modifier
+                        .align(alignment = Alignment.TopStart)
+                        .offset(x = 23.dp,
+                            y = 0.dp)
+                        .requiredWidth(width = 139.dp)
+                        .requiredHeight(height = 17.dp))
             }
         }
     }

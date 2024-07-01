@@ -1,6 +1,7 @@
 package ua.besf0r.cubauncher.network.file
 
 import io.ktor.network.sockets.*
+import ua.besf0r.cubauncher.javaDir
 import ua.besf0r.cubauncher.librariesDir
 import ua.besf0r.cubauncher.minecraft.OperatingSystem
 import ua.besf0r.cubauncher.network.DownloadManager
@@ -13,6 +14,7 @@ import java.net.HttpURLConnection
 import java.net.URISyntaxException
 import java.net.URL
 import java.nio.file.Files
+import java.nio.file.Path
 import java.nio.file.Paths
 import kotlin.io.path.Path
 import kotlin.io.path.pathString
@@ -31,12 +33,12 @@ object UpdaterManager {
 
             val expectedHash = fileInfo[0]
             if (!DownloadManager.shouldDownloadFile(expectedHash,
-                    Path(byGetProtectionDomain(UpdaterManager::class.java)))) return
+                    IOUtil.byGetProtectionDomain(UpdaterManager::class.java))) return
 
             ProcessBuilder(
-                OperatingSystem.javaType,
+                javaDir.resolve("java-runtime-gamma").resolve("bin").resolve(OperatingSystem.javaType).pathString,
                 "-jar", fileDir.pathString,
-                "-update", byGetProtectionDomain(UpdaterManager::class.java)
+                "-update", IOUtil.byGetProtectionDomain(UpdaterManager::class.java).toString()
             ).start()
 
             exitProcess(0)
@@ -88,10 +90,5 @@ object UpdaterManager {
             setRequestProperty("Authorization", "token $GITHUB_TOKEN")
             setRequestProperty("Accept", "application/vnd.github.v3.raw")
         }
-    }
-    @Throws(URISyntaxException::class)
-    fun byGetProtectionDomain(clazz: Class<*>): String {
-        val url = clazz.protectionDomain.codeSource.location
-        return Paths.get(url.toURI()).toString()
     }
 }

@@ -95,14 +95,14 @@ class InstanceManager(
 
     @Throws(IOException::class)
     fun deleteInstance(name: String) {
-        val instance = getInstanceByName(name)?: return
+        val instance = getInstanceByName(name) ?: return
         val instanceDir = getInstanceDir(instance)
         if (Files.exists(instanceDir)) {
             FilesManager.deleteDirectoryRecursively(instanceDir)
         }
 
         val selected = settingsManager.settings.selectedInstance
-        if (selected == name){
+        if (selected == name) {
             settingsManager.settings.selectedInstance = null
         }
         instances.remove(instance)

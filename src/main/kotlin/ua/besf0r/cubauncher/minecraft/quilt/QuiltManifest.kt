@@ -3,7 +3,7 @@ package ua.besf0r.cubauncher.minecraft.quilt
 import kotlinx.serialization.Serializable
 import ua.besf0r.cubauncher.network.DownloadManager.Companion.downloadDataList
 
-object QuiltVersionManifest {
+object QuiltManifest {
     private const val MANIFEST_URL = "https://meta.quiltmc.org/v3/versions/game"
     @Serializable
     data class Version(val version: String, val stable: Boolean)

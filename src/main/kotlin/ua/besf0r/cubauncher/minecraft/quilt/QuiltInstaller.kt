@@ -36,7 +36,7 @@ class QuiltInstaller {
                 val path = librariesDir.resolve(createUrl(it.name))
 
                 libraries.add(DownloadManager.DownloadFile(url = url, saveAs = path))
-                instance.quiltLibraries.add(path)
+                instance.customLibraries.add(path)
             }
             DownloadManager.executeMultiple(libraries){ value: Long, size: Long ->
                 progress.onProgress(value, size)

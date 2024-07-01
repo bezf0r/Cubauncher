@@ -12,7 +12,7 @@ import kotlinx.serialization.json.*
 import ua.besf0r.cubauncher.Logger
 import ua.besf0r.cubauncher.httpClient
 
-object ForgeVersionManifest {
+object ForgeManifest {
     @Serializable(ForgeDeserializer::class)
     data class VersionManifest(val versions: List<Pair<String, List<String>>>)
 

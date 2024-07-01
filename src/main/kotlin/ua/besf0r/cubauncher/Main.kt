@@ -1,5 +1,6 @@
 package ua.besf0r.cubauncher
 
+import androidx.compose.desktop.ui.tooling.preview.Preview
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -23,17 +24,15 @@ import ua.besf0r.cubauncher.instance.InstanceManager
 import ua.besf0r.cubauncher.laucnher.SettingsManager
 import ua.besf0r.cubauncher.minecraft.version.VersionList
 import ua.besf0r.cubauncher.network.file.FilesManager
+import ua.besf0r.cubauncher.network.file.IOUtil
 import ua.besf0r.cubauncher.network.file.UpdaterManager
 import ua.besf0r.cubauncher.window.createMainTitleBar
 import ua.besf0r.cubauncher.window.main.BottomColumn
 import ua.besf0r.cubauncher.window.main.InstancesGrid
 import ua.besf0r.cubauncher.window.main.LeftColumn
-import java.nio.file.FileSystems
 import java.nio.file.Path
 
-
-val workDir: Path = FileSystems.getDefault().getPath(
-    System.getProperty("user.home"), "Cubauncher")
+val workDir: Path = IOUtil.byGetProtectionDomain(Logger::class.java).parent
 
 val assetsDir: Path  = workDir.resolve("assets")
 val librariesDir: Path = workDir.resolve("libraries")
@@ -51,6 +50,7 @@ val instanceManager = InstanceManager(instancesDir)
 val settingsManager = SettingsManager(settingsFile)
 
 @Composable
+@Preview
 fun App() {
     Box(modifier = Modifier
         .fillMaxSize()
@@ -88,7 +88,7 @@ private fun ApplicationScope.onDisable() {
 
 private fun loadMainData() = runBlocking {
     withContext(Dispatchers.IO) {
-        //UpdaterManager.checkForUpdates()
+        UpdaterManager.checkForUpdates()
 
         FilesManager.createDirectories(
             workDir, assetsDir, librariesDir, versionsDir, javaDir

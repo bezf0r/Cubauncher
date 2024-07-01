@@ -9,6 +9,7 @@ import ua.besf0r.cubauncher.instanceManager
 import ua.besf0r.cubauncher.minecraft.fabric.FabricInstaller
 import ua.besf0r.cubauncher.minecraft.quilt.QuiltInstaller
 import ua.besf0r.cubauncher.minecraft.forge.ForgeInstaller
+import ua.besf0r.cubauncher.minecraft.liteloader.LiteLoaderInstaller
 import ua.besf0r.cubauncher.minecraft.optifine.OptiFineInstaller
 import ua.besf0r.cubauncher.network.DownloadListener
 import ua.besf0r.cubauncher.window.alert.ProgressAlert
@@ -84,6 +85,12 @@ fun downloadFiles(
             if (modManager == ModificationManager.QUILT){
                 if (modManagerVersion != null)
                     QuiltInstaller().download(
+                        downloadListener,modManagerVersion,instance
+                    )
+            }
+            if (modManager == ModificationManager.LITE_LOADER){
+                if (modManagerVersion != null)
+                    LiteLoaderInstaller().download(
                         downloadListener,modManagerVersion,instance
                     )
             }

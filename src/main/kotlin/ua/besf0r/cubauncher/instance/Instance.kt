@@ -10,6 +10,8 @@ import ua.besf0r.cubauncher.minecraft.forge.newprofile.NewForgeProfile
 import ua.besf0r.cubauncher.minecraft.forge.newprofile.NewProfilePathSerializer
 import ua.besf0r.cubauncher.minecraft.forge.oldprofile.OldForgeProfile
 import ua.besf0r.cubauncher.minecraft.forge.oldprofile.OldProfilePathSerializer
+import ua.besf0r.cubauncher.minecraft.liteloader.LiteLoaderPathSerializer
+import ua.besf0r.cubauncher.minecraft.liteloader.LiteLoaderProfile
 import ua.besf0r.cubauncher.minecraft.version.MinecraftVersion
 import ua.besf0r.cubauncher.network.file.IOUtil
 import ua.besf0r.cubauncher.versionsDir
@@ -32,10 +34,11 @@ class Instance(
     @Serializable(with = NewProfilePathSerializer::class)
     var newForgeProfile: NewForgeProfile? = null
 
+    @Serializable(with = LiteLoaderPathSerializer::class)
+    var liteLoaderProfile: LiteLoaderProfile? = null
+
     @Serializable(PathListSerializer::class)
-    var fabricLibraries: MutableList<Path> = mutableListOf()
-    @Serializable(PathListSerializer::class)
-    var quiltLibraries: MutableList<Path> = mutableListOf()
+    var customLibraries: MutableList<Path> = mutableListOf()
 }
 object PathListSerializer : KSerializer<MutableList<Path>> {
     override val descriptor: SerialDescriptor = ListSerializer(String.serializer()).descriptor

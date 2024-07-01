@@ -68,7 +68,7 @@ data class CreateInstanceData(
     val optifineVersion: String? = null,
     val modManagerVersion: String? = null
 )
-enum class ModificationManager{ WITHOUT, FORGE, FABRIC, QUILT }
+enum class ModificationManager{ WITHOUT, FORGE, FABRIC, QUILT, LITE_LOADER }
 
 private fun versionType(screenData: MutableState<CreateInstanceData>) =
     if (screenData.value.isRelease) "release" else "snapshot"

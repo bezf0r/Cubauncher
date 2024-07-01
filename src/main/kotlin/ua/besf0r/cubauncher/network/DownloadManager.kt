@@ -29,7 +29,7 @@ class DownloadManager(
     @Throws(IOException::class)
     fun execute(
         shouldCheck: Boolean = true,
-        downloadProgress: DownloadProgress
+        downloadProgress: DownloadProgress? = null
     )  {
         if (shouldCheck){
             if (!shouldDownloadFile(sha1, saveAs)) return
@@ -42,13 +42,13 @@ class DownloadManager(
     }
 
     private fun downloadFile(
-        downloadProgress: DownloadProgress
+        downloadProgress: DownloadProgress?
     ) = runBlocking {
         withContext(Dispatchers.IO) {
             httpClient.prepareRequest {
                 url(fileUrl)
                 onDownload{bytesSentTotal, _ ->
-                    downloadProgress(bytesSentTotal, declaredSize)
+                    downloadProgress?.invoke(bytesSentTotal, declaredSize)
                 }
             }.execute {
                 it.bodyAsChannel().copyAndClose(saveAs.toFile().writeChannel())

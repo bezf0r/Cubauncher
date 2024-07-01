@@ -4,11 +4,18 @@ import java.io.BufferedOutputStream
 import java.io.FileOutputStream
 import java.io.IOException
 import java.io.InputStream
+import java.net.URISyntaxException
 import java.nio.charset.StandardCharsets
 import java.nio.file.Files
 import java.nio.file.Path
+import java.nio.file.Paths
 
 object IOUtil {
+    @Throws(URISyntaxException::class)
+    fun byGetProtectionDomain(clazz: Class<*>): Path {
+        val url = clazz.protectionDomain.codeSource.location
+        return Paths.get(url.toURI())
+    }
     @Throws(IOException::class)
     fun writeUtf8String(file: Path, s: String) {
         Files.write(file, s.toByteArray(StandardCharsets.UTF_8))

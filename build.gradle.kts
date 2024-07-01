@@ -1,7 +1,7 @@
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
-    kotlin("jvm") version "2.0.0"
+    id("org.jetbrains.kotlin.jvm") version "2.0.0"
     id("org.jetbrains.kotlin.plugin.compose") version "2.0.0"
     id("org.jetbrains.compose") version "1.6.20-dev1667"
     kotlin("plugin.serialization") version "1.9.10"
@@ -18,6 +18,18 @@ repositories {
     maven("https://maven.pkg.jetbrains.space/public/p/compose/dev")
     maven("https://jitpack.io")
     google()
+}
+//kotlin {
+//    mingwX64("native") { // on macOS
+//        binaries {
+//            executable()
+//        }
+//    }
+//}
+
+tasks.withType<Wrapper> {
+    gradleVersion = "8.5"
+    distributionType = Wrapper.DistributionType.BIN
 }
 
 dependencies {
