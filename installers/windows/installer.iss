@@ -1,4 +1,4 @@
-#define MyAppName "Cubauncher"
+#define MyAppName "Kovadlo"
 #define MyAppURL "https://t.me/cubeuniverseua"
 #define MyAppVersion "1.0.0"
 
@@ -29,7 +29,7 @@ ChangesAssociations=yes
 
 [Run]
 Filename: {tmp}\7za.exe; Parameters: "x ""{tmp}\jre.zip"" -o""{app}\java"" * -r -aoa"; Flags: runhidden runascurrentuser
-Filename: {app}\java\java-runtime-gamma\bin\javaw.exe; Parameters: "-jar {app}\Cubauncher.jar"; Description: {cm:LaunchProgram,{#MyAppName}}; Flags: nowait postinstall skipifsilent
+Filename: {app}\java\java-runtime-gamma\bin\javaw.exe; Parameters: "-jar {app}\Kovadlo.jar"; Description: {cm:LaunchProgram,{#MyAppName}}; Flags: nowait postinstall skipifsilent
 
 [Tasks]
 Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: checkedonce
@@ -48,7 +48,7 @@ Name: "ukrainian"; MessagesFile: Ukrainian.isl
 
 [Icons]
 Name: "{group}\{#MyAppName}"; Filename: "{app}\{#MyAppName}.jar"
-Name: "{userdesktop}\{#MyAppName}"; Filename: "{app}\java\java-runtime-gamma\bin\java.exe";Parameters: "-jar {app}\Cubauncher.jar"; Tasks: desktopicon; IconFilename:"C:\Users\Volodymyr_\Desktop\logo.ico"
+Name: "{userdesktop}\{#MyAppName}"; Filename: "{app}\java\java-runtime-gamma\bin\java.exe";Parameters: "-jar {app}\Kovadlo.jar"; Tasks: desktopicon; IconFilename:"C:\Users\Volodymyr_\Desktop\logo.ico"
 Name: "{group}\{cm:UninstallProgram,{#MyAppName}}"; Filename: "{uninstallexe}"
 
 [InstallDelete]
@@ -81,7 +81,7 @@ begin
   if CurPageID = wpReady then begin
     DownloadPage.Clear;
 
-    DownloadPage.Add('https://cdn.discordapp.com/attachments/1173681631807144037/1257288536743219272/Cubauncher.jar?ex=6683dcb2&is=66828b32&hm=56169c26d114ccfdee9db8b65441a791d19f78aac532678201e818044ac016da&', '{#MyAppName}.jar', '');
+    DownloadPage.Add('https://omhms.com/share/Cubauncher.jar', '{#MyAppName}.jar', '');
 
  
     if IsWin64 then begin

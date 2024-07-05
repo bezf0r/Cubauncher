@@ -19,13 +19,6 @@ repositories {
     maven("https://jitpack.io")
     google()
 }
-//kotlin {
-//    mingwX64("native") { // on macOS
-//        binaries {
-//            executable()
-//        }
-//    }
-//}
 
 tasks.withType<Wrapper> {
     gradleVersion = "8.5"
@@ -36,7 +29,7 @@ dependencies {
     implementation(compose.desktop.currentOs)
 
     implementation("io.ktor:ktor-client-core:2.3.9")
-    implementation("io.ktor:ktor-client-cio:2.3.9")
+    implementation("io.ktor:ktor-client-java:2.3.9")
     implementation("io.ktor:ktor-client-content-negotiation:2.3.9")
 
     implementation("org.apache.commons:commons-text:1.11.0")
@@ -53,9 +46,9 @@ fun mapObfuscatedJarFile(file: File) =
 
 compose.desktop {
     application {
-        mainClass = "ua.besf0r.cubauncher.MainKt"
+        mainClass = "ua.besf0r.kovadlo.MainKt"
         nativeDistributions {
-            packageName = "Cubauncher"
+            packageName = "Kovadlo"
             packageVersion = "1.0.0"
 
             appResourcesRootDir.set(project.layout.projectDirectory.dir("resources"))

@@ -1,1 +1,1 @@
-rootProject.name = "Cubauncher"
+rootProject.name = "Kovadlo"
