@@ -7,6 +7,7 @@ import io.ktor.client.statement.*
 import io.ktor.http.*
 import io.ktor.util.cio.*
 import io.ktor.utils.io.*
+import io.ktor.utils.io.core.*
 import kotlinx.coroutines.*
 import kotlinx.serialization.json.Json
 import ua.besf0r.kovadlo.Logger
@@ -18,7 +19,9 @@ import java.io.IOException
 import java.nio.file.Path
 import java.security.MessageDigest
 import java.util.*
+import kotlin.io.path.appendBytes
 import kotlin.io.path.exists
+import kotlin.io.path.writeBytes
 
 class DownloadManager(
     private val fileUrl: String,
@@ -36,17 +39,25 @@ class DownloadManager(
 
     private suspend fun downloadFileAsync(
         downloadProgress: DownloadProgress?
-    ) = runBlocking {
+    ) = withContext(Dispatchers.IO) {
         FileManager.createDirectories(saveAs.parent)
         saveAs.createFileIfNotExists()
+        saveAs.writeBytes(byteArrayOf())
 
-        httpClient.prepareRequest {
+        httpClient.prepareGet{
             url(fileUrl)
             onDownload { bytesSentTotal, _ ->
                 downloadProgress?.invoke(bytesSentTotal, declaredSize)
             }
-        }.execute {
-            it.bodyAsChannel().copyAndClose(saveAs.toFile().writeChannel())
+        }.execute { httpResponse ->
+            val channel: ByteReadChannel = httpResponse.body()
+            while (!channel.isClosedForRead) {
+                val packet = channel.readRemaining(DEFAULT_BUFFER_SIZE.toLong())
+                while (!packet.isEmpty) {
+                    val bytes = packet.readBytes()
+                    saveAs.appendBytes(bytes)
+                }
+            }
         }
     }
 
@@ -74,7 +85,6 @@ class DownloadManager(
         ): Boolean {
             if (!saveAs.exists()) return true
             if (sha1 == null) return true
-
             val shaInDisk = calculateHash(FileInputStream(saveAs.toFile()))
 
             return shaInDisk != sha1
@@ -84,7 +94,6 @@ class DownloadManager(
         fun executeMultiple(
             files: List<DownloadFile>,
             taskJob: CoroutineScope? = null,
-            chunkSize: Int = 15,
             downloadProgress: (Long, Long) -> Unit
         ) = runBlocking {
             val total = files.sumOf { it.declaredSize }
@@ -93,21 +102,23 @@ class DownloadManager(
             val forDownload = files.filter { shouldDownloadFile(it.sha1, it.saveAs) }
             files.filter { it !in forDownload }.map { downloaded += it.declaredSize }
 
-            forDownload.chunked(chunkSize).forEach { chunk ->
-                val requests = ArrayList<Deferred<Unit>>()
-                chunk.map { file ->
-                    requests.add(async {
-                        taskJob?.let { if (!it.isActive) return@async }
-                        val downloadManager = DownloadManager(
-                            file.url, file.sha1,
-                            file.declaredSize, file.saveAs
-                        )
-                        downloadManager.downloadFileAsync { _, _ -> }
-                        downloaded += file.declaredSize
-                        downloadProgress(downloaded, total)
-                    })
+            val groups = forDownload.groupBy { it.declaredSize >= 10 * 1024 * 1024 }
+
+            groups.forEach { group ->
+                taskJob?.let { if (!it.isActive) return@forEach }
+                group.value.chunked(20).forEach { chunk ->
+                    chunk.map { file ->
+                        async (Dispatchers.IO) {
+                            DownloadManager(
+                                file.url, file.sha1,
+                                file.declaredSize, file.saveAs
+                            ).downloadFileAsync { _, _ -> }
+
+                            downloaded += file.declaredSize
+                            downloadProgress(downloaded, total)
+                        }
+                    }.awaitAll()
                 }
-                requests.awaitAll()
             }
         }
 

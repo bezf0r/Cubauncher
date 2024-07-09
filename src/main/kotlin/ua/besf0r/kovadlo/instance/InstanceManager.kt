@@ -86,7 +86,7 @@ class InstanceManager(
         val minecraftDir = instanceDir.resolve(minecraftDirName)
         minecraftDir.createDirectoryIfNotExists()
         val instanceFile = instanceDir.resolve("instance.json")
-        instanceDir.createFileIfNotExists()
+        instanceFile.createFileIfNotExists()
 
         IOUtil.writeUtf8String(instanceFile, Json.encodeToString(instance))
 

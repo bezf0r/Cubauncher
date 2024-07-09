@@ -9,6 +9,8 @@ import java.nio.charset.StandardCharsets
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
+import kotlin.io.path.readBytes
+import kotlin.io.path.readText
 
 object IOUtil {
     @Throws(URISyntaxException::class)
@@ -33,6 +35,6 @@ object IOUtil {
 
     @Throws(IOException::class)
     fun readUtf8String(file: Path): String {
-        return java.lang.String.join(System.lineSeparator(), Files.readAllLines(file))
+        return file.readText()
     }
 }

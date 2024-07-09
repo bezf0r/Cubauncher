@@ -201,7 +201,12 @@ class InstanceRunner(private val instance: Instance){
         val account = accountsManager.accounts
             .getByName(settings.selectedAccount ?: "")
         if (account == null) throw NullPointerException("Selected account is null, please select account").apply {
-            Logger.publish(this.stackTraceToString())
+            JOptionPane.showMessageDialog(
+                JFrame(),
+                "Ви не обрали аккаунт, будь ласка оберіть його щоб почати грати",
+                "Kovadlo ERROR",
+                JOptionPane.ERROR_MESSAGE
+            )
         }
         try {
             if (account is MicrosoftAccount) {

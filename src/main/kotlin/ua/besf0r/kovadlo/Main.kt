@@ -88,12 +88,12 @@ private fun ApplicationScope.onDisable() {
 
 private fun loadMainData() = runBlocking {
     withContext(Dispatchers.IO) {
+        UpdaterManager.downloadUpdater()
         UpdaterManager.checkForUpdates()
 
         FileManager.createDirectories(
             workDir, assetsDir, librariesDir, versionsDir, javaDir
         )
-        UpdaterManager.downloadUpdater()
 
         accountsManager.loadAccounts()
         instanceManager.loadInstances()

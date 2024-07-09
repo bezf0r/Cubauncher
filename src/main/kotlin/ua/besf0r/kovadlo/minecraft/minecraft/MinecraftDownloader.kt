@@ -37,10 +37,7 @@ class MinecraftDownloader(
         currentJob.async {
             currentInstance = instance
 
-            val manifestRead = IOUtil.readUtf8String(versionsDir.resolve("version_manifest_v2.json"))
-            val manifest = json.decodeFromString<VersionManifest.VersionManifest>(manifestRead)
-
-            val versions = manifest.versions
+            val versions = MinecraftVersionList.versions
             val version = versions.find { it.id == instance.minecraftVersion }!!
 
             saveClientJson(version)
@@ -59,31 +56,35 @@ class MinecraftDownloader(
     }
 
     @Throws(IOException::class)
-    private fun saveClientJson(version: VersionManifest.Version) {
+    private fun saveClientJson(
+        version: VersionManifest.Version
+    ) {
         if (!currentJob.isActive) return
         val jsonFile = versionsDir.resolve(version.id).resolve(version.id + ".json")
 
-        DownloadManager(version.url, version.sha1, saveAs = jsonFile).downloadFile { _, _ -> }
+        DownloadManager(
+            version.url,
+            version.sha1,
+            saveAs = jsonFile
+        ).downloadFile { _, _ -> }
     }
 
     private val json = Json { ignoreUnknownKeys = true }
 
     @Throws(IOException::class)
-    private fun downloadClient(version: VersionManifest.Version) {
-        if (!currentJob.isActive) return
+    private fun downloadClient(version: VersionManifest.Version) = runBlocking {
+        if (!currentJob.isActive) return@runBlocking
         val jsonFile = versionsDir.resolve(version.id).resolve(version.id + ".json")
         val versionInfo: MinecraftVersion = json.decodeFromString(IOUtil.readUtf8String(jsonFile))
 
-        val client = versionInfo.downloads?.client ?: return
+        val client = versionInfo.downloads?.client ?: return@runBlocking
         val jarFile = versionsDir.resolve(version.id).resolve(version.id + ".jar")
         minecraftDownloadListener.onProgress(0, 0)
         minecraftDownloadListener.onStageChanged("Завантаження клієнта...")
 
         DownloadManager(
-            client.url,
-            client.sha1,
-            client.size,
-            jarFile
+            client.url, client.sha1,
+            client.size, jarFile
         ).downloadFile { value: Long, size: Long ->
             minecraftDownloadListener.onProgress(value, size)
         }
@@ -172,15 +173,15 @@ class MinecraftDownloader(
     @Throws(IOException::class)
     private fun downloadAssetIndexes(
         versionInfo: MinecraftVersion
-    ) {
-        if (!currentJob.isActive) return
+    ) = runBlocking {
+        if (!currentJob.isActive) return@runBlocking
         minecraftDownloadListener.onProgress(0, 0)
         minecraftDownloadListener.onStageChanged("Завантаження індексу...")
 
         val indexesFolder = assetsDir.resolve("indexes")
         indexesFolder.createDirectoryIfNotExists()
 
-        val assetIndex = versionInfo.assetIndex ?: return
+        val assetIndex = versionInfo.assetIndex ?: return@runBlocking
 
         val assetId: String = assetIndex.id
         val indexFile = indexesFolder.resolve("$assetId.json")
@@ -235,14 +236,13 @@ class MinecraftDownloader(
             )
         }
         DownloadManager.executeMultiple(
-            filesForDownload,currentJob,
-            10
+            filesForDownload,currentJob
         ) { value: Long, size: Long ->
             minecraftDownloadListener.onProgress(value, size)
         }
     }
 
-    private fun downloadJava(version: MinecraftVersion){
+    private fun downloadJava(version: MinecraftVersion) {
         if (!currentJob.isActive) return
 
         minecraftDownloadListener.onProgress(0, 0)
@@ -259,11 +259,11 @@ class MinecraftDownloader(
         DownloadManager(
             fileUrl = allRuntimeUrl,
             saveAs = runtimesFile
-        ).downloadFile { _, _ ->  }
+        ).downloadFile { _, _ -> }
 
         val jsonObject = json.parseToJsonElement(
-            IOUtil.readUtf8String(javaDir.resolve("runtimes.json"))
-        ).jsonObject
+                IOUtil.readUtf8String(javaDir.resolve("runtimes.json"))
+            ).jsonObject
 
         val osRuntime = jsonObject[jreOsName]?.jsonObject?.get(javaKey)
             ?: throw IllegalArgumentException("Expected runtime information not found for $jreOsName and $javaKey")
@@ -274,7 +274,7 @@ class MinecraftDownloader(
         DownloadManager(
             fileUrl = runtime.manifest!!.url!!,
             saveAs = manifestFile
-        ).downloadFile{ _, _ ->}
+        ).downloadFile { _, _ -> }
 
         val manifest = json.decodeFromString<JavaRuntimeManifest>(
             IOUtil.readUtf8String(manifestFile)

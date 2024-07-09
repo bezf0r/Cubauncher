@@ -18,8 +18,8 @@ DisableWelcomePage=no
 DefaultGroupName={#MyAppName}
 DisableProgramGroupPage=yes
 PrivilegesRequired=lowest
+Compression=lzma2
 SetupIconFile=..\..\src\main\resources\logo.ico
-Compression=lzma
 SolidCompression=yes
 OutputBaseFilename={#MyAppName}
 UninstallDisplayIcon={app}\{#MyAppName}.exe
@@ -29,7 +29,7 @@ ChangesAssociations=yes
 
 [Run]
 Filename: {tmp}\7za.exe; Parameters: "x ""{tmp}\jre.zip"" -o""{app}\java"" * -r -aoa"; Flags: runhidden runascurrentuser
-Filename: {app}\java\java-runtime-gamma\bin\javaw.exe; Parameters: "-jar {app}\Kovadlo.jar"; Description: {cm:LaunchProgram,{#MyAppName}}; Flags: nowait postinstall skipifsilent
+Filename: {app}\java\java-runtime-gamma\bin\java.exe; Parameters: "-jar {app}\Kovadlo.jar"; Description: {cm:LaunchProgram,{#MyAppName}}; Flags: nowait postinstall skipifsilent
 
 [Tasks]
 Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: checkedonce
@@ -47,8 +47,8 @@ Name: "english"; MessagesFile: "compiler:Default.isl"
 Name: "ukrainian"; MessagesFile: Ukrainian.isl
 
 [Icons]
-Name: "{group}\{#MyAppName}"; Filename: "{app}\{#MyAppName}.jar"
-Name: "{userdesktop}\{#MyAppName}"; Filename: "{app}\java\java-runtime-gamma\bin\java.exe";Parameters: "-jar {app}\Kovadlo.jar"; Tasks: desktopicon; IconFilename:"C:\Users\Volodymyr_\Desktop\logo.ico"
+Name: "{group}\{#MyAppName}"; Filename: "{app}\java\java-runtime-gamma\bin\java.exe"; Parameters: "-jar {app}\Kovadlo.jar"; IconFilename:"{uninstallexe}"
+Name: "{userdesktop}\{#MyAppName}"; Filename: "{app}\java\java-runtime-gamma\bin\java.exe"; Parameters: "-jar {app}\Kovadlo.jar"; Tasks: desktopicon; IconFilename:"{uninstallexe}"
 Name: "{group}\{cm:UninstallProgram,{#MyAppName}}"; Filename: "{uninstallexe}"
 
 [InstallDelete]
@@ -81,7 +81,7 @@ begin
   if CurPageID = wpReady then begin
     DownloadPage.Clear;
 
-    DownloadPage.Add('https://omhms.com/share/Cubauncher.jar', '{#MyAppName}.jar', '');
+    DownloadPage.Add('https://omhms.com/share/Kovadlo.jar', '{#MyAppName}.jar', '');
 
  
     if IsWin64 then begin

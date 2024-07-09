@@ -7,11 +7,13 @@ import androidx.compose.runtime.produceState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.painter.Painter
+import androidx.compose.ui.graphics.toAwtImage
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.loadImageBitmap
 import androidx.compose.ui.res.loadSvgPainter
 import androidx.compose.ui.res.loadXmlImageVector
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.Density
 import io.ktor.client.*
 import io.ktor.client.engine.java.*
@@ -32,29 +34,25 @@ fun <T> AsyncImage(
     modifier: Modifier = Modifier,
     contentScale: ContentScale = ContentScale.Fit,
 ) {
-    val image: T? by produceState<T?>(null) {
-        value = withContext(Dispatchers.IO) {
-            try {
-                load()
-            } catch (e: IOException) {
-                e.printStackTrace()
-                null
-            }
+    RenderAsync(
+        load = Load@ {
+            load()
+        },
+        itemContent = { image ->
+            Image(
+                painter = painterFor(image!!),
+                contentDescription = contentDescription,
+                contentScale = contentScale,
+                modifier = modifier
+            )
         }
-    }
-
-    if (image != null) {
-        Image(
-            painter = painterFor(image!!),
-            contentDescription = contentDescription,
-            contentScale = contentScale,
-            modifier = modifier
-        )
-    }
+    )
 }
 
 /* Loading from file with java.io API */
 
+@Composable
+fun loadImageFromResources(name: String) = painterResource(name)
 fun loadImageBitmap(file: File): ImageBitmap =
     file.inputStream().buffered().use(::loadImageBitmap)
 

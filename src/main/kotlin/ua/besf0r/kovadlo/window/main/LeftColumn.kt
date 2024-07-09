@@ -1,5 +1,6 @@
 package ua.besf0r.kovadlo.window.main
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -24,6 +25,7 @@ import ua.besf0r.kovadlo.instanceManager
 import ua.besf0r.kovadlo.settingsManager
 import ua.besf0r.kovadlo.window.component.AsyncImage
 import ua.besf0r.kovadlo.window.component.loadImageBitmap
+import ua.besf0r.kovadlo.window.component.loadImageFromResources
 import ua.besf0r.kovadlo.workDir
 import java.awt.Desktop
 
@@ -42,9 +44,8 @@ fun LeftColumn() {
                 .requiredHeight(height = 156.dp)
                 .background(color = settingsManager.settings.currentTheme.panelsColor)
         )
-        AsyncImage(
-            load = { loadImageBitmap("https://i.imgur.com/142KSyy.png") },
-            painterFor = { remember { BitmapPainter(it) } },
+        Image(
+            loadImageFromResources("logo.png") ,
             "",
             modifier = Modifier
                 .align(alignment = Alignment.TopStart)

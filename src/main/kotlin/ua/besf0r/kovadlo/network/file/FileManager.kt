@@ -38,15 +38,15 @@ object FileManager {
         return this
     }
 
-    @Throws(IOException::class)
     fun Path.createFileIfNotExists(): Path {
-        if (!Files.exists(this)) this.createFile()
-        return this
+        return try {
+            this.createFile()
+        }catch (e: FileAlreadyExistsException){
+            this
+        }
     }
 
-    fun createDirectories(vararg directories: Path) {
-        try {
-            directories.forEach { it.createDirectoryIfNotExists() }
-        } catch (_: IOException) { }
-    }
+    fun createDirectories(vararg directories: Path) =
+        directories.forEach { it.createDirectoryIfNotExists() }
+
 }

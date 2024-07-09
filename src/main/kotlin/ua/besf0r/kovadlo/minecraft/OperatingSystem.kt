@@ -82,21 +82,6 @@ enum class OperatingSystem {
 
         var javaType: String = if (oS == WINDOWS) "java.exe" else "java"
 
-        val java17OrMore = Java@ {
-            var componentDir = javaDir.resolve("java-runtime-gamma")
-
-            if (componentDir.notExists()) return@Java javaType
-
-            if (OperatingSystem.oS == MACOS) {
-                componentDir = componentDir.resolve("jre.bundle")
-                    .resolve("Contents").resolve("Home")
-            }
-
-            return@Java componentDir
-                .resolve("bin")
-                .resolve(javaType)
-                .pathString
-        }
 
         fun List<Rule>?.applyOnThisPlatform(): Boolean {
             var lastAction = Rule.Action.DISALLOW
