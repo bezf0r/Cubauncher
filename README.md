@@ -1,6 +1,6 @@
 ENGLISH:
 
-About this project: This is a launcher for the game Minecraft written by me. The goal was to explore different api's like Jetpack Compose or Ktor. I also explored general file handling, efficiently downloading files from the internet or creating designs in Figma, and much more. 
+About this project: This is a launcher for the game Minecraft written by me. The goal was to explore different api's like Jetpack Compose or Ktor. I also explored general file handling, efficiently downloading files from the internet or creating designs in Figma, Software size optimisation with Proguard, software downloader on the user's device with automatic JVM installation using Inno Setup technology and much more. 
 
 THIS PROJECT IS NOT YET READY FOR USE
 
@@ -8,7 +8,7 @@ This is not my only project, there are other projects as well. But if you need t
 
 GERMAN:
 
-Über dieses Projekt: Dies ist ein von mir geschriebener Launcher für das Spiel Minecraft. Das Ziel war es, verschiedene Api's wie Jetpack Compose oder Ktor zu erforschen. Außerdem habe ich mich mit allgemeiner Dateiverwaltung, effizientem Herunterladen von Dateien aus dem Internet oder dem Erstellen von Designs in Figma und vielem mehr beschäftigt. 
+Über dieses Projekt: Dies ist ein von mir geschriebener Launcher für das Spiel Minecraft. Das Ziel war es, verschiedene Api's wie Jetpack Compose oder Ktor zu erforschen. Außerdem habe ich mich mit allgemeiner Dateiverwaltung, effizientem Herunterladen von Dateien aus dem Internet oder dem Erstellen von Designs in Figma, Optimierung der Softwaregröße mit Proguard, Software-Downloader auf dem Gerät des Benutzers mit automatischer JVM-Installation unter Verwendung der Inno Setup-Technologie und vielem mehr beschäftigt. 
 
 DIESES PROJEKT IST NOCH NICHT EINSATZBEREIT
 
