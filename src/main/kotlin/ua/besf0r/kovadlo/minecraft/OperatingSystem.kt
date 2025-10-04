@@ -2,11 +2,10 @@ package ua.besf0r.kovadlo.minecraft
 
 import com.sun.jna.Platform
 import kotlinx.serialization.SerialName
-import ua.besf0r.kovadlo.javaDir
+import ua.besf0r.kovadlo.settings.directories.WorkingDirs
 import ua.besf0r.kovadlo.minecraft.minecraft.MinecraftVersion
 import ua.besf0r.kovadlo.minecraft.minecraft.Rule
 import java.util.*
-import kotlin.io.path.notExists
 import kotlin.io.path.pathString
 
 
@@ -56,8 +55,8 @@ enum class OperatingSystem {
             return javaVersion.component!!
         }
 
-        fun getJavaPath(version: MinecraftVersion): String {
-            var componentDir = javaDir.resolve(getJavaKey(version))
+        fun getJavaPath(version: MinecraftVersion, workingDirs: WorkingDirs): String {
+            var componentDir = workingDirs.javaDir.resolve(getJavaKey(version))
 
             if (OperatingSystem.oS == MACOS) {
                 componentDir = componentDir.resolve("jre.bundle")

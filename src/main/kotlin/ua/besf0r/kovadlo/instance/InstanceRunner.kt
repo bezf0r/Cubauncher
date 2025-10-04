@@ -4,8 +4,12 @@ import androidx.compose.runtime.*
 import kotlinx.coroutines.*
 import kotlinx.serialization.json.Json
 import org.apache.commons.text.StringSubstitutor
+import org.kodein.di.DI
+import org.kodein.di.direct
+import org.kodein.di.instance
 import ua.besf0r.kovadlo.*
 import ua.besf0r.kovadlo.account.Account
+import ua.besf0r.kovadlo.account.AccountsManager
 import ua.besf0r.kovadlo.account.MicrosoftAccount
 import ua.besf0r.kovadlo.account.getByName
 import ua.besf0r.kovadlo.account.microsoft.MicrosoftOAuthUtils
@@ -14,6 +18,7 @@ import ua.besf0r.kovadlo.minecraft.OperatingSystem.Companion.applyOnThisPlatform
 import ua.besf0r.kovadlo.minecraft.minecraft.MinecraftVersion
 import ua.besf0r.kovadlo.network.file.IOUtil
 import ua.besf0r.kovadlo.network.file.MavenUtil
+import ua.besf0r.kovadlo.settings.SettingsManager
 import java.io.*
 import java.net.ConnectException
 import java.nio.charset.StandardCharsets
@@ -24,20 +29,22 @@ import kotlin.io.path.notExists
 import kotlin.io.path.pathString
 
 
-class InstanceRunner(private val instance: Instance){
+class InstanceRunner(
+    private val di: DI,
+    private val instance: Instance
+){
     fun run() {
-        val dispatcher = Executors.newSingleThreadExecutor().asCoroutineDispatcher()
-        CoroutineScope(dispatcher).launch {
-            val versionInfoFile = versionsDir.resolve(instance.minecraftVersion)
+        di.coroutine().launch {
+            val versionInfoFile = di.workingDirs().versionsDir.resolve(instance.minecraftVersion)
                 .resolve("${instance.minecraftVersion}.json")
             val versionInfo = json.decodeFromString<MinecraftVersion>(IOUtil.readUtf8String(versionInfoFile))
 
             val arguments = getArguments(versionInfo)
 
             val exitCode = runGameProcess(arguments)
-            Logger.publish("Minecraft сесію закінченно з кодом $exitCode")
+            di.logger().publish("launcher","Minecraft сесію закінченно з кодом $exitCode")
 
-            instanceManager.update(instance)
+            di.instanceManager().update(instance)
         }
     }
 
@@ -47,27 +54,27 @@ class InstanceRunner(private val instance: Instance){
         val classpath: MutableList<String> = mutableListOf()
 
         val version = versionInfo.id ?: throw NullPointerException("Сould not get version id").apply {
-            Logger.publish(this.stackTraceToString())
+            di.logger().publish("launcher",this.stackTraceToString())
         }
 
-        val originalClientPath = versionsDir.resolve(version)
+        val originalClientPath = di.workingDirs().versionsDir.resolve(version)
             .resolve("${version}.jar").toAbsolutePath()
 
         instance.forgeNewInstallProfile?.libraries?.forEach {
             val artifact = it.downloads.artifact
-            val path = librariesDir.resolve(artifact.path)
+            val path = di.workingDirs().librariesDir.resolve(artifact.path)
             classpath.add(path.pathString)
         }
         instance.forgeOldIntallProfile?.libraries?.forEach {
             if (it.name == null) return@forEach
-            classpath.add(librariesDir.resolve(MavenUtil.createUrl(it.name)).pathString)
+            classpath.add(di.workingDirs().librariesDir.resolve(MavenUtil.createUrl(it.name)).pathString)
         }
 
         instance.customLibraries.forEach { classpath.add(it.pathString) }
 
         versionInfo.libraries.mapNotNull {
             it.downloads?.artifact?.path?.let { path ->
-                librariesDir.resolve(path).pathString
+                di.workingDirs().librariesDir.resolve(path).pathString
             }
         }.let(classpath::addAll)
 
@@ -78,9 +85,9 @@ class InstanceRunner(private val instance: Instance){
 
     @Throws(IOException::class)
     private fun getArguments(versionInfo: MinecraftVersion): MutableList<String> {
-        val instanceDir = instanceManager.getMinecraftDir(instance)
+        val instanceDir = di.instanceManager().getMinecraftDir(instance)
         val arguments = mutableListOf<String>()
-        val natives = versionsDir.resolve(instance.minecraftVersion).resolve("natives")
+        val natives = di.workingDirs().versionsDir.resolve(instance.minecraftVersion).resolve("natives")
         val classpath = generateClassPath(versionInfo)
         val account = validateAccount()
 
@@ -89,14 +96,14 @@ class InstanceRunner(private val instance: Instance){
         val args = mapOf(
             "launcher_name" to "Kovadlo($launcherVersion)",
             "launcher_version" to "1.0-beta",
-            "natives_directory" to if (natives.notExists()) librariesDir else natives,
+            "natives_directory" to if (natives.notExists()) di.workingDirs().librariesDir else natives,
             "classpath" to classpath.joinToString(File.pathSeparator),
             "client" to "-",
             "auth_xuid" to "-",
             "auth_player_name" to account.username,
             "version_name" to versionInfo.id.toString(),
             "game_directory" to instanceDir.toAbsolutePath().pathString,
-            "assets_root" to assetsDir.toAbsolutePath().pathString,
+            "assets_root" to di.workingDirs().assetsDir.toAbsolutePath().pathString,
             "assets_index_name" to versionInfo.assets,
             "auth_uuid" to account.uuid,
             "auth_access_token" to account.accessToken,
@@ -107,23 +114,23 @@ class InstanceRunner(private val instance: Instance){
             "resolution_height" to "540",
 
             // Forge additions
-            "library_directory" to librariesDir.pathString,
+            "library_directory" to di.workingDirs().librariesDir.pathString,
             "classpath_separator" to File.pathSeparator
         )
 
         val substitutor = StringSubstitutor(args)
 
-        arguments.add(OperatingSystem.getJavaPath(versionInfo))
+        arguments.add(OperatingSystem.getJavaPath(versionInfo, di.workingDirs()))
 
         instance.forgeNewInstallProfile?.jvmArguments?.forEach {
             arguments.add(substitutor.replace(it).replace("\\","/"))
         }
         
-        arguments.add("-Xms" + settingsManager.settings.minimumRam + "m")
-        arguments.add("-Xmx" + settingsManager.settings.maximumRam + "m")
+        arguments.add("-Xms" + di.settingsManager().settings.minimumRam + "m")
+        arguments.add("-Xmx" + di.settingsManager().settings.maximumRam + "m")
 
         arguments.add(substitutor.replace("-Djava.library.path=\${natives_directory}"))
-        arguments.add("-DlibraryDirectory=${librariesDir.pathString}")
+        arguments.add("-DlibraryDirectory=${di.workingDirs().librariesDir.pathString}")
 
         jvmArguments(isNewFormat, versionInfo, arguments, substitutor)
         arguments.add(instance.mainClass)
@@ -196,10 +203,10 @@ class InstanceRunner(private val instance: Instance){
     }
 
     private fun validateAccount(): Account = runBlocking{
-        val settings = settingsManager.settings
+        val settings = di.settingsManager().settings
 
-        val account = accountsManager.accounts
-            .getByName(settings.selectedAccount ?: "")
+        val account = di.accountsManager().accounts
+            .getByName(settings.selectedAccount.value ?: "")
         if (account == null) throw NullPointerException("Selected account is null, please select account").apply {
             JOptionPane.showMessageDialog(
                 JFrame(),
@@ -210,13 +217,14 @@ class InstanceRunner(private val instance: Instance){
         }
         try {
             if (account is MicrosoftAccount) {
-                val refreshed = MicrosoftOAuthUtils.refreshToken(account.refreshToken) ?: return@runBlocking account
+                val microsoftOAuthUtils = di.direct.instance<MicrosoftOAuthUtils>()
+                val refreshed = microsoftOAuthUtils.refreshToken(account.refreshToken) ?: return@runBlocking account
 
-                MicrosoftOAuthUtils.loginToMicrosoftAccount(refreshed) { refreshAccount ->
-                    accountsManager.deleteAccount(account.username)
+                microsoftOAuthUtils.loginToMicrosoftAccount(refreshed) { refreshAccount ->
+                    di.accountsManager().deleteAccount(account.username)
 
-                    accountsManager.createAccount(refreshAccount)
-                    Logger.publish("Успішний вхід для користувача: ${refreshAccount.username}")
+                    di.accountsManager().createAccount(refreshAccount)
+                    di.logger().publish("launcher","Успішний вхід для користувача: ${refreshAccount.username}")
                 }
             }
         }catch (e: ConnectException){
@@ -233,15 +241,15 @@ class InstanceRunner(private val instance: Instance){
 
     private fun runGameProcess(command: List<String>): Int {
         val process = ProcessBuilder(command)
-            .directory(instanceManager.getMinecraftDir(instance).toFile()).start()
-        Logger.publish(command.joinToString(" "))
+            .directory(di.instanceManager().getMinecraftDir(instance).toFile()).start()
+        di.logger().publish(instance.name,command.joinToString(" "))
 
         BufferedReader(
             InputStreamReader(process.inputStream, StandardCharsets.UTF_8)
         ).use { reader ->
             var line: String?
             while ((reader.readLine().also { line = it }) != null) {
-                Logger.publish("[${instance.name}] $line")
+                di.logger().publish(instance.name,"[${instance.name}] $line")
             }
         }
         return process.waitFor()

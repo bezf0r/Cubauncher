@@ -12,10 +12,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import org.kodein.di.DI
 import ua.besf0r.kovadlo.settingsManager
 
 @Composable
 fun CircularCheckbox(
+    di: DI,
     modifier: Modifier = Modifier,
     checked: Boolean,
     onCheckedChange: (Boolean) -> Unit
@@ -23,7 +25,7 @@ fun CircularCheckbox(
     Box(
         modifier = modifier
             .size(15.dp)
-            .background(color = settingsManager.settings.currentTheme.fontColor,
+            .background(color = di.settingsManager().settings.currentTheme.fontColor,
                 shape = CircleShape)
             .clickable { onCheckedChange(!checked) },
         contentAlignment = Alignment.Center
@@ -32,7 +34,7 @@ fun CircularCheckbox(
             Icon(
                 imageVector = Icons.Default.Check,
                 contentDescription = "",
-                tint = settingsManager.settings.currentTheme.textColor,
+                tint = di.settingsManager().settings.currentTheme.textColor,
                 modifier = Modifier.size(15.dp)
             )
         }

@@ -19,10 +19,14 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
+import org.kodein.di.DI
+import org.kodein.di.direct
+import org.kodein.di.instance
 import ua.besf0r.kovadlo.Logger
 import ua.besf0r.kovadlo.account.microsoft.MicrosoftDeviceCode
 import ua.besf0r.kovadlo.account.microsoft.MicrosoftOAuthUtils
 import ua.besf0r.kovadlo.accountsManager
+import ua.besf0r.kovadlo.logger
 import ua.besf0r.kovadlo.window.component.HyperlinkText
 import java.awt.Toolkit
 import java.awt.datatransfer.StringSelection
@@ -103,26 +107,28 @@ fun copyToClipboard(text: String) {
 }
 @Composable
 fun ParseMicrosoftAccountDialog(
+    di: DI,
     onDeviceCode: @Composable (deviceCode: MicrosoftDeviceCode) -> Unit,
     onSuccess: () -> Unit
 ){
+    val microsoftOAuthUtils = di.direct.instance<MicrosoftOAuthUtils>()
     val isCallBack = remember { mutableStateOf(false) }
-    if (isCallBack.value) onDeviceCode(MicrosoftOAuthUtils.currentCallBack!!)
+    if (isCallBack.value) onDeviceCode(microsoftOAuthUtils.currentCallBack!!)
 
     LaunchedEffect(Unit){
-        MicrosoftOAuthUtils.obtainDeviceCodeAsync(
+        microsoftOAuthUtils.obtainDeviceCodeAsync(
             deviceCodeCallback = {
-                MicrosoftOAuthUtils.currentCallBack = it
+                microsoftOAuthUtils.currentCallBack = it
                 isCallBack.value = true
             },
             errorCallback = {},
             successCallback = {
                 onSuccess()
-                Logger.publish("Авторизація успішна!")
+                di.logger().publish("launcher","Авторизація успішна!")
 
-                MicrosoftOAuthUtils.loginToMicrosoftAccount(it) { account ->
-                    accountsManager.createAccount(account)
-                    Logger.publish("Успішний вхід для користувача: ${account.username}")
+                microsoftOAuthUtils.loginToMicrosoftAccount(it) { account ->
+                    di.accountsManager().createAccount(account)
+                    di.logger().publish("launcher","Успішний вхід для користувача: ${account.username}")
                 }
             }
         )

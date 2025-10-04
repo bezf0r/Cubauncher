@@ -13,17 +13,23 @@ import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.rememberWindowState
+import org.kodein.di.DI
+import org.kodein.di.direct
+import ua.besf0r.kovadlo.AppStrings
 import ua.besf0r.kovadlo.launcherVersion
 import ua.besf0r.kovadlo.minecraft.ModificationManager
 import ua.besf0r.kovadlo.minecraft.minecraft.VersionManifest
+import ua.besf0r.kovadlo.settings.SettingsManager
 import ua.besf0r.kovadlo.settingsManager
 import ua.besf0r.kovadlo.window.createMainTitleBar
 
 @Composable
 fun InstanceWindow(
+    di: DI,
     onDismissed: () -> Unit,
     onDownload: @Composable (MutableState<CreateInstanceData>) -> Unit
 ) {
+    val settingsManager: SettingsManager = di.settingsManager()
     val windowState = rememberWindowState(size = DpSize(720.dp, 512.dp))
 
     val screenData = remember{ mutableStateOf(CreateInstanceData()) }
@@ -32,7 +38,7 @@ fun InstanceWindow(
 
     Window(
         icon = painterResource("logo.png"),
-        title = "Kovadlo ($launcherVersion) - створити збірку",
+        title = "Kovadlo ${AppStrings.get("create_instance_screen.window_name", launcherVersion)}",
         state = windowState,
         resizable = false,
         undecorated = true,
@@ -42,11 +48,11 @@ fun InstanceWindow(
 
         createMainTitleBar(windowState){ onDismissed() }
 
-        IconSector()
-        ChangeNameSector(screenData)
-        ChangeVersionSector(versionType, screenData)
-        ChangeModsManagerSector(screenData)
-        ButtonsSector(isDownloading) { onDismissed() }
+        IconSector(di)
+        ChangeNameSector(di, screenData)
+        ChangeVersionSector(di, versionType, screenData)
+        ChangeModsManagerSector(di, screenData)
+        ButtonsSector(di,isDownloading) { onDismissed() }
 
         if (isDownloading.value) { onDownload(screenData) }
     }

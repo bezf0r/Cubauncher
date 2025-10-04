@@ -1,5 +1,6 @@
 package ua.besf0r.kovadlo.minecraft.forge
 
+import io.ktor.client.*
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
 import kotlinx.coroutines.runBlocking
@@ -10,9 +11,11 @@ import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
 import kotlinx.serialization.json.*
 import ua.besf0r.kovadlo.Logger
-import ua.besf0r.kovadlo.httpClient
+import ua.besf0r.kovadlo.logger
 
-object ForgeVersionList {
+class ForgeVersionList(
+    private val httpClient: HttpClient
+) {
     @Serializable(ForgeDeserializer::class)
     data class Version(val versions: Map<String, List<String>>)
 
@@ -33,7 +36,7 @@ object ForgeVersionList {
         override fun serialize(encoder: Encoder, value: Version) {}
     }
 
-    private const val manifestUrl = "https://files.minecraftforge.net/net/minecraftforge/forge/maven-metadata.json"
+    private val manifestUrl = "https://files.minecraftforge.net/net/minecraftforge/forge/maven-metadata.json"
 
     val versions: Version = try {
         runBlocking {
@@ -41,7 +44,6 @@ object ForgeVersionList {
             Json.decodeFromString<Version>(response)
         }
     } catch (e: Exception) {
-        Logger.publish("Помилка при завантаженні версій forge: ${e.stackTraceToString()}")
         Version(mapOf())
     }
 }

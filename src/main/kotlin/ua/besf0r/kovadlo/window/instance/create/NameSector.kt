@@ -13,12 +13,15 @@ import androidx.compose.ui.graphics.painter.BitmapPainter
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import org.kodein.di.DI
+import ua.besf0r.kovadlo.AppStrings
 import ua.besf0r.kovadlo.settingsManager
 import ua.besf0r.kovadlo.window.component.AsyncImage
 import ua.besf0r.kovadlo.window.component.loadImageBitmap
 
 @Composable
 fun ChangeNameSector(
+    di: DI,
     screenData: MutableState<CreateInstanceData>
 ) {
     val instanceName = screenData.value.instanceName
@@ -34,11 +37,11 @@ fun ChangeNameSector(
             modifier = Modifier
                 .requiredWidth(width = 605.dp)
                 .requiredHeight(height = 100.dp)
-                .background(color = settingsManager.settings.currentTheme.panelsColor)
+                .background(color = di.settingsManager().settings.currentTheme.panelsColor)
         )
         Text(
-            text = "Назва збірки:",
-            color = settingsManager.settings.currentTheme.textColor,
+            text = AppStrings.get("create_instance_screen.name_of_instance"),
+            color = di.settingsManager().settings.currentTheme.textColor,
             style = TextStyle(fontSize = 16.sp),
             modifier = Modifier
                 .align(alignment = Alignment.TopStart)
@@ -54,12 +57,12 @@ fun ChangeNameSector(
             },
             label = {},
             colors = TextFieldDefaults.outlinedTextFieldColors(
-                focusedBorderColor = settingsManager.settings.currentTheme.focusedBorderColor,
-                unfocusedBorderColor = settingsManager.settings.currentTheme.unfocusedBorderColor,
-                textColor = settingsManager.settings.currentTheme.textColor,
-                disabledTextColor = settingsManager.settings.currentTheme.textColor,
-                focusedLabelColor = settingsManager.settings.currentTheme.textColor,
-                unfocusedLabelColor = settingsManager.settings.currentTheme.textColor
+                focusedBorderColor = di.settingsManager().settings.currentTheme.focusedBorderColor,
+                unfocusedBorderColor = di.settingsManager().settings.currentTheme.unfocusedBorderColor,
+                textColor = di.settingsManager().settings.currentTheme.textColor,
+                disabledTextColor = di.settingsManager().settings.currentTheme.textColor,
+                focusedLabelColor = di.settingsManager().settings.currentTheme.textColor,
+                unfocusedLabelColor = di.settingsManager().settings.currentTheme.textColor
             ),
             textStyle = TextStyle(fontSize = 15.sp),
             modifier = Modifier
@@ -71,7 +74,9 @@ fun ChangeNameSector(
     }
 }
 @Composable
-fun IconSector() {
+fun IconSector(
+    di: DI
+) {
     TextButton(
         onClick = { },
         colors = ButtonDefaults.buttonColors(backgroundColor = Color.Transparent),
@@ -82,7 +87,7 @@ fun IconSector() {
         Box(
             modifier = Modifier
                 .requiredSize(size = 100.dp)
-                .background(color = settingsManager.settings.currentTheme.panelsColor)
+                .background(color = di.settingsManager().settings.currentTheme.panelsColor)
         ) {
             AsyncImage(
                 load = { loadImageBitmap("https://cdn.apexminecrafthosting.com/img/uploads/2021/12/06173101/crafting-table.png") },

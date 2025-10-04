@@ -8,7 +8,10 @@ import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Text
 import androidx.compose.material.TextButton
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -17,32 +20,20 @@ import androidx.compose.ui.graphics.painter.BitmapPainter
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.withContext
-import org.jetbrains.skiko.MainUIDispatcher
-import ua.besf0r.kovadlo.instance.Instance
+import org.kodein.di.DI
 import ua.besf0r.kovadlo.instanceManager
 import ua.besf0r.kovadlo.settingsManager
 import ua.besf0r.kovadlo.window.component.AsyncImage
 import ua.besf0r.kovadlo.window.component.loadImageBitmap
 
 @Composable
-fun InstancesGrid() {
-    var instances by remember { mutableStateOf(emptyList<Instance>()) }
-
-    LaunchedEffect(Unit) {
-        while (true) {
-            instanceManager.instances.clear()
-            instanceManager.loadInstances()
-            withContext(MainUIDispatcher) {
-                instances = instanceManager.instances.toList()
-            }
-            delay(100)
-        }
-    }
+fun InstancesGrid(
+    di: DI
+) {
+    val instances = di.instanceManager().instances
 
     val selectedInstance = remember { mutableStateOf(
-        settingsManager.settings.selectedInstance
+        di.settingsManager().settings.selectedInstance
     ) }
 
     LazyVerticalGrid(
@@ -55,13 +46,14 @@ fun InstancesGrid() {
         verticalArrangement = Arrangement.spacedBy(7.dp),
     ) {
         items(instances.map { it.name }) {instance ->
-            InstanceGrid(selectedInstance, instance)
+            InstanceGrid(di, selectedInstance, instance)
         }
     }
 }
 
 @Composable
 private fun InstanceGrid(
+    di: DI,
     selectedInstance: MutableState<String?>,
     instance: String,
 ) {
@@ -73,7 +65,7 @@ private fun InstanceGrid(
         TextButton(
             onClick = {
                 selectedInstance.value = instance
-                settingsManager.settings.selectedInstance = selectedInstance.value
+                di.settingsManager().settings.selectedInstance = selectedInstance.value
             },
             modifier = Modifier
                 .align(alignment = Alignment.TopStart)
@@ -95,7 +87,7 @@ private fun InstanceGrid(
                         .clip(shape = RoundedCornerShape(3.5.dp))
                         .background(
                             color = if (selectedInstance.value == instance)
-                                settingsManager.settings.currentTheme.selectedButtonColor
+                                di.settingsManager().settings.currentTheme.selectedButtonColor
                             else Color(0xff464646)
                         )
                 )
@@ -105,7 +97,7 @@ private fun InstanceGrid(
                         .requiredHeight(height = 55.dp)
                         .background(
                             color = if (selectedInstance.value == instance)
-                                settingsManager.settings.currentTheme.selectedButtonColor
+                                di.settingsManager().settings.currentTheme.selectedButtonColor
                             else Color(0xff464646)
                         )
                 ) {
@@ -120,7 +112,7 @@ private fun InstanceGrid(
                 }
                 Text(
                     text = instance,
-                    color = settingsManager.settings.currentTheme.textColor,
+                    color = di.settingsManager().settings.currentTheme.textColor,
                     style = TextStyle(fontSize = 12.sp),
                     modifier = Modifier
                         .align(alignment = Alignment.TopStart)

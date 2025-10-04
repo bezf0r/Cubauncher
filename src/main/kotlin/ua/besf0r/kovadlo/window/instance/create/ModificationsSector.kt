@@ -19,6 +19,10 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import org.kodein.di.DI
+import org.kodein.di.direct
+import org.kodein.di.instance
+import ua.besf0r.kovadlo.AppStrings
 import ua.besf0r.kovadlo.minecraft.fabric.FabricInstaller
 import ua.besf0r.kovadlo.minecraft.fabric.FabricVersionList
 import ua.besf0r.kovadlo.minecraft.forge.ForgeInstaller
@@ -34,6 +38,7 @@ import ua.besf0r.kovadlo.window.component.RenderAsync
 
 @Composable
 fun ChangeModsManagerSector(
+    di: DI,
     screenData: MutableState<CreateInstanceData>
 ) {
     val modManager = screenData.value.modManager
@@ -50,7 +55,7 @@ fun ChangeModsManagerSector(
             modifier = Modifier
                 .requiredWidth(width = 500.dp)
                 .requiredHeight(height = 180.dp)
-                .background(color = settingsManager.settings.currentTheme.panelsColor)
+                .background(color = di.settingsManager().settings.currentTheme.panelsColor)
         )
         Box(
             modifier = Modifier
@@ -59,7 +64,7 @@ fun ChangeModsManagerSector(
                 .requiredWidth(width = 203.dp)
                 .requiredHeight(height = 170.dp)
                 .clip(shape = RoundedCornerShape(5.dp))
-                .background(color = settingsManager.settings.currentTheme.fontColor)
+                .background(color = di.settingsManager().settings.currentTheme.fontColor)
         ) {
             Box(
                 modifier = Modifier
@@ -68,11 +73,11 @@ fun ChangeModsManagerSector(
                     .requiredWidth(width = 191.dp)
                     .requiredHeight(height = 15.dp)
                     .clip(shape = RoundedCornerShape(5.dp))
-                    .background(color = settingsManager.settings.currentTheme.panelsColor)
+                    .background(color = di.settingsManager().settings.currentTheme.panelsColor)
             )
             Text(
-                text = "Версія",
-                color = settingsManager.settings.currentTheme.textColor,
+                text = AppStrings.get("create_instance_screen.modification_version"),
+                color = di.settingsManager().settings.currentTheme.textColor,
                 style = TextStyle(fontSize = 13.sp),
                 modifier = Modifier
                     .align(alignment = Alignment.TopStart)
@@ -84,8 +89,8 @@ fun ChangeModsManagerSector(
             if (screenData.value.hasOptifine){
                 RenderAsync(
                     load = Load@{
-                        val optifineVersions = OptiFineVersionList.versions
-                        return@Load optifineVersions
+                        val optifineVersions: OptiFineVersionList = di.direct.instance()
+                        return@Load optifineVersions.versions
                     },
                     itemContent = Item@ { optifine ->
                         val forCurrentVersion = optifine.filter { it.mcversion == selectedVersion?.id }
@@ -101,15 +106,15 @@ fun ChangeModsManagerSector(
             when(modManager){
                 is ForgeInstaller -> {
                     RenderAsync(load = Load@{
-                        val forgeVersions = ForgeVersionList.versions.versions
-                        return@Load (forgeVersions[selectedVersion?.id] ?: listOf()).reversed()
-                    }, itemContent = { ModificationVersionsGrid(it, screenData) })
+                        val forgeVersions: ForgeVersionList = di.direct.instance()
+                        return@Load (forgeVersions.versions.versions[selectedVersion?.id] ?: listOf()).reversed()
+                    }, itemContent = { ModificationVersionsGrid(di, it, screenData) })
                 }
                 is FabricInstaller -> {
                     RenderAsync(
                         load = Load@{
-                            val fabricVersions = FabricVersionList.loaderVersion
-                            val supportedVersions = FabricVersionList.minecraftVersions
+                            val fabricVersions = di.direct.instance<FabricVersionList>().loaderVersion
+                            val supportedVersions = di.direct.instance<FabricVersionList>().minecraftVersions
                             val isSupported = supportedVersions.find { it.version == selectedVersion?.id } != null
 
                             return@Load if (isSupported) {
@@ -117,12 +122,12 @@ fun ChangeModsManagerSector(
                             } else {
                                 listOf()
                             }
-                        },itemContent = { ModificationVersionsGrid(it, screenData) })
+                        },itemContent = { ModificationVersionsGrid(di, it, screenData) })
                 }
                 is QuiltInstaller -> {
                     RenderAsync(load = Load@{
-                        val quiltVersions = QuiltVersionList.loaderVersion
-                        val supportedVersions = QuiltVersionList.minecraftVersions
+                        val quiltVersions = di.direct.instance<QuiltVersionList>().loaderVersion
+                        val supportedVersions = di.direct.instance<QuiltVersionList>().minecraftVersions
                         val isSupported = supportedVersions.find { it.version == selectedVersion?.id } != null
 
                         return@Load if (isSupported) {
@@ -130,14 +135,14 @@ fun ChangeModsManagerSector(
                         } else {
                             listOf()
                         }
-                    }, itemContent = { ModificationVersionsGrid(it, screenData) })
+                    }, itemContent = { ModificationVersionsGrid(di, it, screenData) })
                 }
                 is LiteLoaderInstaller -> {
                     RenderAsync(load = Load@{
-                        val liteLoaderVersions = LiteLoaderVersionList.versions
+                        val liteLoaderVersions = di.direct.instance<LiteLoaderVersionList>().versions
                         return@Load liteLoaderVersions.filter { it.inheritsFrom == selectedVersion?.id }
                             .map { it.version }
-                    }, itemContent = { ModificationVersionsGrid(it, screenData) })
+                    }, itemContent = { ModificationVersionsGrid(di, it, screenData) })
                 }
                 else -> { }
             }
@@ -150,7 +155,7 @@ fun ChangeModsManagerSector(
                 .requiredHeight(height = 97.dp)
         ) {
             Text(
-                text = "Завантажувач модів:",
+                text = AppStrings.get("create_instance_screen.modification_name"),
                 color = Color.White,
                 style = TextStyle(fontSize = 15.sp),
                 modifier = Modifier
@@ -165,6 +170,7 @@ fun ChangeModsManagerSector(
                     .requiredHeight(height = 20.dp)
             ) {
                 CircularCheckbox(
+                    di,
                     checked = modManager == null,
                     onCheckedChange = {
                         screenData.value = screenData.value.copy(modManager = null)
@@ -172,7 +178,7 @@ fun ChangeModsManagerSector(
                     modifier = Modifier.align(alignment = Alignment.CenterStart)
                 )
                 Text(
-                    text = "Без завантажуча",
+                    text = AppStrings.get("create_instance_screen.without_modification"),
                     color = Color.White,
                     textAlign = TextAlign.Center,
                     style = TextStyle(fontSize = 15.sp),
@@ -191,9 +197,10 @@ fun ChangeModsManagerSector(
                     .requiredHeight(height = 20.dp)
             ) {
                 CircularCheckbox(
+                    di,
                     checked = modManager is ForgeInstaller,
                     onCheckedChange = {
-                        screenData.value = screenData.value.copy(modManager = ForgeInstaller())
+                        screenData.value = screenData.value.copy(modManager = ForgeInstaller(di))
                     },
                     modifier = Modifier.align(alignment = Alignment.CenterStart)
                 )
@@ -216,9 +223,10 @@ fun ChangeModsManagerSector(
                     .requiredHeight(height = 20.dp)
             ) {
                 CircularCheckbox(
+                    di,
                     checked = modManager is FabricInstaller,
                     onCheckedChange = {
-                        screenData.value = screenData.value.copy(modManager = FabricInstaller())
+                        screenData.value = screenData.value.copy(modManager = FabricInstaller(di))
                     },
                     modifier = Modifier.align(alignment = Alignment.CenterStart)
                 )
@@ -241,9 +249,10 @@ fun ChangeModsManagerSector(
                     .requiredHeight(height = 20.dp)
             ) {
                 CircularCheckbox(
+                    di,
                     checked = modManager is QuiltInstaller,
                     onCheckedChange = {
-                        screenData.value = screenData.value.copy(modManager = QuiltInstaller())
+                        screenData.value = screenData.value.copy(modManager = QuiltInstaller(di))
                     },
                     modifier = Modifier.align(alignment = Alignment.CenterStart)
                 )
@@ -266,6 +275,7 @@ fun ChangeModsManagerSector(
                     .requiredHeight(height = 20.dp)
             ) {
                 CircularCheckbox(
+                    di,
                     checked = screenData.value.hasOptifine,
                     onCheckedChange = {
                         screenData.value = screenData.value.copy(
@@ -280,7 +290,7 @@ fun ChangeModsManagerSector(
                         var color = Color.White
                         RenderAsync(
                             load = Load@{
-                                val optifineVersions = OptiFineVersionList.versions
+                                val optifineVersions = di.direct.instance<OptiFineVersionList>().versions
                                 return@Load optifineVersions
                             },
                             itemContent = Item@ { optifine ->
@@ -313,9 +323,10 @@ fun ChangeModsManagerSector(
                     .requiredHeight(height = 17.dp)
             ) {
                 CircularCheckbox(
+                    di,
                     checked = modManager is LiteLoaderInstaller,
                     onCheckedChange = {
-                        screenData.value = screenData.value.copy(modManager = LiteLoaderInstaller())
+                        screenData.value = screenData.value.copy(modManager = LiteLoaderInstaller(di))
                     },
                     modifier = Modifier.align(alignment = Alignment.CenterStart)
                 )
@@ -336,6 +347,7 @@ fun ChangeModsManagerSector(
 }
 @Composable
 fun ModificationVersionsGrid(
+    di: DI,
     versions: List<String>,
     screenData: MutableState<CreateInstanceData>,
     onCustomValue: ((name: String) -> Unit)? = null
@@ -355,7 +367,7 @@ fun ModificationVersionsGrid(
                     },
                     colors = ButtonDefaults.buttonColors(
                         backgroundColor = if (modManagerVersion == it)
-                            settingsManager.settings.currentTheme.selectedButtonColor
+                            di.settingsManager().settings.currentTheme.selectedButtonColor
                         else Color.Transparent
                     ),
                     modifier = Modifier
@@ -369,7 +381,7 @@ fun ModificationVersionsGrid(
                     ) {
                         Text(
                             text = it,
-                            color = settingsManager.settings.currentTheme.textColor,
+                            color = di.settingsManager().settings.currentTheme.textColor,
                             textAlign = TextAlign.Center,
                             style = TextStyle(fontSize = 13.sp),
                             modifier = Modifier

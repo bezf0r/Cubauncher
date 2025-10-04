@@ -20,12 +20,14 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
+import org.kodein.di.DI
 import ua.besf0r.kovadlo.account.OfflineAccount
 import ua.besf0r.kovadlo.accountsManager
 import ua.besf0r.kovadlo.settingsManager
 
 @Composable
 fun OfflineAccountDialog(
+    di: DI,
     onDismissRequest: () -> Unit
 ){
     val nickname = remember { mutableStateOf("") }
@@ -70,7 +72,7 @@ fun OfflineAccountDialog(
                 onClick = {
                     onDismissRequest()
                     if (nickname.value.length >= 4){
-                        accountsManager.createAccount(OfflineAccount(nickname.value))
+                        di.accountsManager().createAccount(OfflineAccount(nickname.value))
                     }
                 },
                 modifier = Modifier
@@ -94,12 +96,12 @@ fun OfflineAccountDialog(
                     if (it.length <= maxLength) nickname.value = validateMinecraftNickname(it)
                 },
                 colors = TextFieldDefaults.outlinedTextFieldColors(
-                    focusedBorderColor = settingsManager.settings.currentTheme.focusedBorderColor,
-                    unfocusedBorderColor = settingsManager.settings.currentTheme.unfocusedBorderColor,
-                    textColor = settingsManager.settings.currentTheme.textColor,
-                    disabledTextColor = settingsManager.settings.currentTheme.textColor,
-                    focusedLabelColor = settingsManager.settings.currentTheme.textColor,
-                    unfocusedLabelColor = settingsManager.settings.currentTheme.textColor
+                    focusedBorderColor = di.settingsManager().settings.currentTheme.focusedBorderColor,
+                    unfocusedBorderColor = di.settingsManager().settings.currentTheme.unfocusedBorderColor,
+                    textColor = di.settingsManager().settings.currentTheme.textColor,
+                    disabledTextColor = di.settingsManager().settings.currentTheme.textColor,
+                    focusedLabelColor = di.settingsManager().settings.currentTheme.textColor,
+                    unfocusedLabelColor = di.settingsManager().settings.currentTheme.textColor
                 ),
                 textStyle = TextStyle(fontSize = 17.sp, textAlign = TextAlign.Center),
                 modifier = Modifier

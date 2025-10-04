@@ -1,14 +1,20 @@
 package ua.besf0r.kovadlo.minecraft.forge
 
+import io.ktor.client.*
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
 import io.ktor.utils.io.errors.*
 import kotlinx.coroutines.*
 import kotlinx.serialization.json.*
 import org.jetbrains.skiko.MainUIDispatcher
-import ua.besf0r.kovadlo.Logger
+import org.kodein.di.DI
+import org.kodein.di.direct
+import org.kodein.di.instance
+import ua.besf0r.kovadlo.settings.directories.WorkingDirs
+import ua.besf0r.kovadlo.coroutine
 import ua.besf0r.kovadlo.instance.Instance
-import ua.besf0r.kovadlo.instanceManager
+import ua.besf0r.kovadlo.instance.InstanceManager
+import ua.besf0r.kovadlo.logger
 import ua.besf0r.kovadlo.minecraft.ModificationManager
 import ua.besf0r.kovadlo.minecraft.OperatingSystem
 import ua.besf0r.kovadlo.minecraft.forge.newprofile.ForgeNewInstallProfile
@@ -18,7 +24,6 @@ import ua.besf0r.kovadlo.network.DownloadManager
 import ua.besf0r.kovadlo.network.file.FileManager.createDirectoryIfNotExists
 import ua.besf0r.kovadlo.network.file.FileManager.createFileIfNotExists
 import ua.besf0r.kovadlo.network.file.IOUtil
-import ua.besf0r.kovadlo.workDir
 import java.io.*
 import java.io.File
 import java.lang.reflect.InvocationHandler
@@ -32,10 +37,15 @@ import java.nio.file.Path
 import java.util.zip.ZipFile
 import kotlin.io.path.deleteIfExists
 
-class ForgeInstaller : ModificationManager {
+class ForgeInstaller(
+    private val di: DI
+) : ModificationManager {
     private val json = Json { ignoreUnknownKeys = true }
 
     private val installer = "https://maven.minecraftforge.net/net/minecraftforge/forge/"
+
+    private val workingDirs: WorkingDirs = di.direct.instance()
+    private val instanceManager: InstanceManager = di.direct.instance()
 
     @Throws(Exception::class)
     override fun download(
@@ -47,12 +57,14 @@ class ForgeInstaller : ModificationManager {
 
         val installerUrl = "$installer${version}/forge-${version}-installer.jar"
 
-        val installerPath = workDir.resolve("forge-installer-${version}.jar")
-        val installerLog = workDir.resolve("forge-installer-${version}.jar.log")
+        val installerPath = workingDirs.workDir.resolve("forge-installer-${version}.jar")
+        val installerLog = workingDirs.workDir.resolve("forge-installer-${version}.jar.log")
         val profiles = createFakeLauncherProfiles()
 
         try {
             DownloadManager(
+                di.direct.instance<HttpClient>(),
+                di.direct.instance(),
                 fileUrl = installerUrl,
                 saveAs = installerPath
             ).downloadFile { value, size -> progress.onProgress(value, size) }
@@ -63,7 +75,7 @@ class ForgeInstaller : ModificationManager {
             instanceManager.getMinecraftDir(instance).resolve("mods").createDirectoryIfNotExists()
         }finally {
             try {
-                CoroutineScope(MainUIDispatcher).launch {
+                di.coroutine().launch(MainUIDispatcher) {
                     delay(10000)
                     profiles.deleteIfExists()
                     installerLog.deleteIfExists()
@@ -86,7 +98,7 @@ class ForgeInstaller : ModificationManager {
     }
 
     private fun createFakeLauncherProfiles(): Path {
-        val profiles = workDir.resolve("launcher_profiles.json").createFileIfNotExists()
+        val profiles = workingDirs.workDir.resolve("launcher_profiles.json").createFileIfNotExists()
         IOUtil.writeUtf8String(
             profiles,
             "{\"selectedProfile\": \"(Default)\",\"profiles\": {\"(Default)\": {\"name\": \"(Default)\"}},\"clientToken\": \"88888888-8888-8888-8888-888888888888\"}"
@@ -129,14 +141,14 @@ class ForgeInstaller : ModificationManager {
                 installerPath.toFile().name,
                 "--installClient"
             )
-        ).directory(workDir.toFile()).start()
+        ).directory(workingDirs.workDir.toFile()).start()
 
         BufferedReader(
             InputStreamReader(process.inputStream, StandardCharsets.UTF_8)
         ).use { reader ->
             var line: String
             while ((reader.readLine().also { line = it }) != null) {
-                Logger.publish(line)
+                di.logger().publish("launcher",line)
             }
         }
 
@@ -163,14 +175,14 @@ class ForgeInstaller : ModificationManager {
                 installerPath.toFile().name,
                 "--installServer"
             )
-        ).directory(workDir.toFile()).start()
+        ).directory(workingDirs.workDir.toFile()).start()
 
         BufferedReader(
             InputStreamReader(process.inputStream, StandardCharsets.UTF_8)
         ).use { reader ->
             var line: String
             while ((reader.readLine().also { line = it }) != null) {
-                Logger.publish(line)
+                di.logger().publish("launcher",line)
             }
         }
         process.waitFor()
@@ -191,7 +203,7 @@ class ForgeInstaller : ModificationManager {
         val pred = Proxy.newProxyInstance(loader, arrayOf<Class<*>?>(predicate), handler)
 
         val install = clientInstall.getConstructor().newInstance()
-        clientInstall.getDeclaredMethod("run", File::class.java, predicate).invoke(install, workDir.toFile(), pred)
+        clientInstall.getDeclaredMethod("run", File::class.java, predicate).invoke(install, workingDirs.workDir.toFile(), pred)
 
         return forgeProfile
     }

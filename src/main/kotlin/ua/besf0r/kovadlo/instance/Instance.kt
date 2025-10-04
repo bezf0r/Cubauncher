@@ -22,12 +22,9 @@ class Instance(
 ) {
     var mainClass: String = "net.minecraft.client.main.Main"
 
-    @Serializable(with = OldProfilePathSerializer::class)
     var forgeOldIntallProfile: ForgeOldIntallProfile.VersionInfo? = null
-    @Serializable(with = NewProfilePathSerializer::class)
     var forgeNewInstallProfile: ForgeNewInstallProfile? = null
 
-    @Serializable(with = LiteLoaderPathSerializer::class)
     var liteLoaderProfile: LiteLoaderProfile? = null
 
     @Serializable(PathListSerializer::class)

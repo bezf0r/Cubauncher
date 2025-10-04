@@ -26,7 +26,6 @@ inline fun <T> RenderAsync(
                     "Kovadlo ERROR",
                     JOptionPane.ERROR_MESSAGE
                 )
-                Logger.publish(e.stackTraceToString())
                 null
             }
         }

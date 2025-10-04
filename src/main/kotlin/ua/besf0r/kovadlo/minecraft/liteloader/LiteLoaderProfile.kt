@@ -9,10 +9,11 @@ import kotlinx.serialization.descriptors.SerialDescriptor
 import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
 import kotlinx.serialization.json.Json
+import ua.besf0r.kovadlo.settings.directories.WorkingDirs
 import ua.besf0r.kovadlo.network.file.IOUtil
-import ua.besf0r.kovadlo.versionsDir
 import kotlin.io.path.Path
 import kotlin.io.path.exists
+import kotlin.io.path.notExists
 import kotlin.io.path.pathString
 
 @Serializable
@@ -43,15 +44,17 @@ data class LiteLoaderProfile(
         val uid: String? = null
     )
 }
-object LiteLoaderPathSerializer : KSerializer<LiteLoaderProfile?> {
+class LiteLoaderPathSerializer(
+    private val workingDirs: WorkingDirs
+) : KSerializer<LiteLoaderProfile> {
     override val descriptor: SerialDescriptor =
         PrimitiveSerialDescriptor("LiteLoaderProfile", PrimitiveKind.STRING)
 
-    override fun serialize(encoder: Encoder, value: LiteLoaderProfile?) {
-        val jsonFile = value?.let {
-            versionsDir.resolve("liteloader-${it.version}.json")
+    override fun serialize(encoder: Encoder, value: LiteLoaderProfile) {
+        val jsonFile = value.let {
+            workingDirs.versionsDir.resolve("liteloader-${it.version}.json")
         }
-        encoder.encodeString(jsonFile?.pathString ?: "")
+        encoder.encodeString(if(jsonFile.notExists()) "" else jsonFile.pathString)
     }
 
     private val json = Json { ignoreUnknownKeys = true }

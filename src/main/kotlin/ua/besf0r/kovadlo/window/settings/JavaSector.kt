@@ -19,6 +19,7 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.sun.management.OperatingSystemMXBean
+import org.kodein.di.DI
 import ua.besf0r.kovadlo.settings.LauncherSettings
 import ua.besf0r.kovadlo.settingsManager
 import java.lang.management.ManagementFactory
@@ -26,13 +27,15 @@ import kotlin.math.ceil
 import kotlin.math.roundToInt
 
 @Composable
-fun JavaSector(){
+fun JavaSector(
+    di: DI
+){
     val mb = 1024 * 1024
     val memorySize = remember {
         (ManagementFactory.getOperatingSystemMXBean() as OperatingSystemMXBean).totalPhysicalMemorySize / mb
     }
 
-    val settings = settingsManager.settings
+    val settings = di.settingsManager().settings
 
     val minimumRam = remember { mutableStateOf(settings.minimumRam.toFloat()) }
     val maximumRam = remember { mutableStateOf(settings.maximumRam.toFloat()) }

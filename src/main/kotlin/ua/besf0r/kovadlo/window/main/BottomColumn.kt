@@ -12,10 +12,7 @@ import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.AddCircle
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Settings
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.MutableState
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -23,6 +20,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import org.kodein.di.DI
+import ua.besf0r.kovadlo.AppStrings
 import ua.besf0r.kovadlo.minecraft.downloadFiles
 import ua.besf0r.kovadlo.settingsManager
 import ua.besf0r.kovadlo.window.instance.create.CreateInstanceData
@@ -31,7 +30,9 @@ import ua.besf0r.kovadlo.window.settings.SettingWindow
 import ua.besf0r.kovadlo.window.settings.SettingsSection
 
 @Composable
-fun BottomColumn(){
+fun BottomColumn(
+    di: DI
+){
     Box(
         modifier = Modifier
             .requiredWidth(width = 720.dp)
@@ -42,7 +43,7 @@ fun BottomColumn(){
             modifier = Modifier
                 .requiredWidth(width = 720.dp)
                 .requiredHeight(height = 85.dp)
-                .background(color = settingsManager.settings.currentTheme.panelsColor))
+                .background(color = di.settingsManager().settings.currentTheme.panelsColor))
 
         val onNewInstance = remember { mutableStateOf(false) }
         TextButton(
@@ -54,11 +55,11 @@ fun BottomColumn(){
                 .requiredWidth(width = 176.dp)
                 .requiredHeight(height = 30.dp)
         ) {
-            if (onNewInstance.value) InstanceWindow(
+            if (onNewInstance.value) InstanceWindow(di,
                 onDismissed = {
                     onNewInstance.value = false
                 }, onDownload = { screenData: MutableState<CreateInstanceData> ->
-                    downloadFiles(screenData, onNewInstance)
+                    downloadFiles(di, screenData, onNewInstance)
                 }
             )
             Box(
@@ -71,9 +72,9 @@ fun BottomColumn(){
                         .requiredWidth(width = 176.dp)
                         .requiredHeight(height = 30.dp)
                         .clip(shape = RoundedCornerShape(4.5.dp))
-                        .background(color = settingsManager.settings.currentTheme.buttonColor))
+                        .background(color = di.settingsManager().settings.currentTheme.buttonColor))
                 Text(
-                    text = "Створити збірку",
+                    text = AppStrings.get("main_screen.create_instance_button"),
                     color = Color.White,
                     style = TextStyle(fontSize = 14.sp),
                     modifier = Modifier
@@ -84,7 +85,7 @@ fun BottomColumn(){
                 )
                 Icon(
                     imageVector = Icons.Filled.AddCircle,
-                    tint = settingsManager.settings.currentTheme.buttonIconColor,
+                    tint = di.settingsManager().settings.currentTheme.buttonIconColor,
                     contentDescription = "",
                     modifier = Modifier
                         .align(alignment = Alignment.CenterStart)
@@ -106,7 +107,7 @@ fun BottomColumn(){
                 .requiredHeight(height = 30.dp)
         ) {
             if (openSettingWindow.value)
-                SettingWindow { openSettingWindow.value = false }
+                SettingWindow(di) { openSettingWindow.value = false }
 
             Box(
                 modifier = Modifier
@@ -118,10 +119,10 @@ fun BottomColumn(){
                         .requiredWidth(width = 173.dp)
                         .requiredHeight(height = 30.dp)
                         .clip(shape = RoundedCornerShape(4.5.dp))
-                        .background(color = settingsManager.settings.currentTheme.buttonColor))
+                        .background(color = di.settingsManager().settings.currentTheme.buttonColor))
                 Text(
-                    text = "Налаштування",
-                    color = settingsManager.settings.currentTheme.textColor,
+                    text = AppStrings.get("main_screen.settings_button"),
+                    color = di.settingsManager().settings.currentTheme.textColor,
                     style = TextStyle(
                         fontSize = 14.sp),
                     modifier = Modifier
@@ -132,7 +133,7 @@ fun BottomColumn(){
                 )
                 Icon(
                     imageVector = Icons.Filled.Settings,
-                    tint = settingsManager.settings.currentTheme.buttonIconColor,
+                    tint = di.settingsManager().settings.currentTheme.buttonIconColor,
                     contentDescription = "",
                     modifier = Modifier
                         .align(alignment = Alignment.CenterStart)
@@ -153,7 +154,7 @@ fun BottomColumn(){
                 .requiredHeight(height = 30.dp)
         ) {
             if (onAccountSettingWindow.value)
-                SettingWindow(SettingsSection.ACCOUNT){
+                SettingWindow(di, SettingsSection.ACCOUNT){
                     onAccountSettingWindow.value = false
                 }
 
@@ -167,10 +168,10 @@ fun BottomColumn(){
                         .requiredWidth(width = 140.dp)
                         .requiredHeight(height = 30.dp)
                         .clip(shape = RoundedCornerShape(4.5.dp))
-                        .background(color = settingsManager.settings.currentTheme.buttonColor))
+                        .background(color = di.settingsManager().settings.currentTheme.buttonColor))
                 Text(
-                    text = "Аккаунт",
-                    color = settingsManager.settings.currentTheme.textColor,
+                    text = AppStrings.get("main_screen.account_button"),
+                    color = di.settingsManager().settings.currentTheme.textColor,
                     style = TextStyle(fontSize = 14.sp),
                     modifier = Modifier
                         .align(alignment = Alignment.Center)
@@ -179,7 +180,7 @@ fun BottomColumn(){
                         .requiredHeight(height = 20.dp))
                 Icon(
                     imageVector = Icons.Filled.AccountCircle,
-                    tint = settingsManager.settings.currentTheme.buttonIconColor,
+                    tint = di.settingsManager().settings.currentTheme.buttonIconColor,
                     contentDescription = "",
                     modifier = Modifier
                         .align(alignment = Alignment.CenterStart)
@@ -194,8 +195,7 @@ fun BottomColumn(){
             colors = ButtonDefaults.buttonColors(backgroundColor = Color.Transparent),
             modifier = Modifier
                 .align(alignment = Alignment.TopStart)
-                .offset(x = 413.dp,
-                    y = 31.dp)
+                .offset(x = 413.dp, y = 31.dp)
                 .requiredWidth(width = 140.dp)
                 .requiredHeight(height = 30.dp)
         ) {
@@ -209,10 +209,10 @@ fun BottomColumn(){
                         .requiredWidth(width = 140.dp)
                         .requiredHeight(height = 30.dp)
                         .clip(shape = RoundedCornerShape(4.5.dp))
-                        .background(color = settingsManager.settings.currentTheme.buttonColor))
+                        .background(color = di.settingsManager().settings.currentTheme.buttonColor))
                 Text(
-                    text = "Допомога",
-                    color = settingsManager.settings.currentTheme.textColor,
+                    text = AppStrings.get("main_screen.help_button"),
+                    color = di.settingsManager().settings.currentTheme.textColor,
                     style = TextStyle(
                         fontSize = 14.sp),
                     modifier = Modifier
@@ -222,7 +222,7 @@ fun BottomColumn(){
                         .requiredHeight(height = 20.dp))
                 Icon(
                     imageVector = Icons.Filled.Info,
-                    tint = settingsManager.settings.currentTheme.buttonIconColor,
+                    tint = di.settingsManager().settings.currentTheme.buttonIconColor,
                     contentDescription = "",
                     modifier = Modifier
                         .align(alignment = Alignment.CenterStart)

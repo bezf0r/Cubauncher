@@ -19,6 +19,11 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import org.kodein.di.DI
+import org.kodein.di.direct
+import org.kodein.di.instance
+import ua.besf0r.kovadlo.App
+import ua.besf0r.kovadlo.AppStrings
 import ua.besf0r.kovadlo.minecraft.minecraft.MinecraftVersionList
 import ua.besf0r.kovadlo.minecraft.minecraft.VersionManifest
 import ua.besf0r.kovadlo.settingsManager
@@ -28,6 +33,7 @@ import java.text.SimpleDateFormat
 
 @Composable
 fun ChangeVersionSector(
+    di: DI,
     versionType: String,
     screenData: MutableState<CreateInstanceData>
 ) {
@@ -43,7 +49,7 @@ fun ChangeVersionSector(
             modifier = Modifier
                 .requiredWidth(width = 710.dp)
                 .requiredHeight(height = 191.dp)
-                .background(color = settingsManager.settings.currentTheme.panelsColor)
+                .background(color = di.settingsManager().settings.currentTheme.panelsColor)
         )
         Box(
             modifier = Modifier
@@ -57,7 +63,7 @@ fun ChangeVersionSector(
                     .requiredWidth(width = 450.dp)
                     .requiredHeight(height = 181.dp)
                     .clip(shape = RoundedCornerShape(5.dp))
-                    .background(color = settingsManager.settings.currentTheme.fontColor)
+                    .background(color = di.settingsManager().settings.currentTheme.fontColor)
             )
             Box(
                 modifier = Modifier
@@ -66,11 +72,11 @@ fun ChangeVersionSector(
                     .requiredWidth(width = 440.dp)
                     .requiredHeight(height = 15.dp)
                     .clip(shape = RoundedCornerShape(5.dp))
-                    .background(color = settingsManager.settings.currentTheme.panelsColor)
+                    .background(color = di.settingsManager().settings.currentTheme.panelsColor)
             )
             Text(
-                text = "Дата виходу",
-                color = settingsManager.settings.currentTheme.textColor,
+                text = AppStrings.get("create_instance_screen.release_date"),
+                color = di.settingsManager().settings.currentTheme.textColor,
                 style = TextStyle(fontSize = 13.sp),
                 modifier = Modifier
                     .align(alignment = Alignment.TopStart)
@@ -79,8 +85,8 @@ fun ChangeVersionSector(
                     .requiredHeight(height = 16.dp)
             )
             Text(
-                text = "Версія",
-                color = settingsManager.settings.currentTheme.textColor,
+                text = AppStrings.get("create_instance_screen.version"),
+                color = di.settingsManager().settings.currentTheme.textColor,
                 style = TextStyle(fontSize = 13.sp),
                 modifier = Modifier
                     .align(alignment = Alignment.TopStart)
@@ -91,7 +97,7 @@ fun ChangeVersionSector(
 
             RenderAsync(
                 load = Load@ {
-                    return@Load MinecraftVersionList.versions.filter { it.type == versionType }
+                    return@Load di.direct.instance<MinecraftVersionList>().versions.filter { it.type == versionType }
                 },
                 itemContent = { versions ->
                     LazyVerticalGrid(
@@ -100,7 +106,7 @@ fun ChangeVersionSector(
                         verticalArrangement = Arrangement.spacedBy(6.dp),
                         content = {
                             items(versions) {
-                                MinecraftVersion(it, screenData)
+                                MinecraftVersion(di, it, screenData)
                             }
                         },
                         modifier = Modifier
@@ -119,7 +125,7 @@ fun ChangeVersionSector(
                 .offset(542.dp, 13.dp)
         ) {
             Text(
-                text = "Фільтр:",
+                text = AppStrings.get("create_instance_screen.filter"),
                 color = Color.White,
                 style = TextStyle(
                     fontSize = 15.sp
@@ -136,6 +142,7 @@ fun ChangeVersionSector(
                     .requiredHeight(height = 18.dp)
             ) {
                 CircularCheckbox(
+                    di,
                     checked = !isRelease,
                     onCheckedChange = {
                         screenData.value = screenData.value.copy(isRelease = !isRelease)
@@ -145,7 +152,7 @@ fun ChangeVersionSector(
                         .offset(y = 3.dp),
                 )
                 Text(
-                    text = "Знімки",
+                    text = AppStrings.get("create_instance_screen.snapshots"),
                     color = Color.White,
                     textAlign = TextAlign.Center,
                     style = TextStyle(
@@ -164,7 +171,7 @@ fun ChangeVersionSector(
                     .requiredHeight(height = 18.dp)
             ) {
                 Text(
-                    text = "Релізи",
+                    text = AppStrings.get("create_instance_screen.releases"),
                     color = Color.White,
                     textAlign = TextAlign.Center,
                     style = TextStyle(
@@ -176,6 +183,7 @@ fun ChangeVersionSector(
                 )
 
                 CircularCheckbox(
+                    di,
                     checked = isRelease,
                     onCheckedChange = {
                         screenData.value = screenData.value.copy(isRelease = !isRelease)
@@ -191,6 +199,7 @@ fun ChangeVersionSector(
 
 @Composable
 private fun MinecraftVersion(
+    di: DI,
     version: VersionManifest.Version,
     screenData: MutableState<CreateInstanceData>
 ) {
@@ -203,7 +212,7 @@ private fun MinecraftVersion(
         colors = ButtonDefaults.buttonColors(
             backgroundColor =
             if (selectedVersion == version)
-                settingsManager.settings.currentTheme.selectedButtonColor
+                di.settingsManager().settings.currentTheme.selectedButtonColor
             else Color.Transparent
         ),
         modifier = Modifier
@@ -217,7 +226,7 @@ private fun MinecraftVersion(
         ) {
             Text(
                 text = version.id,
-                color = settingsManager.settings.currentTheme.textColor,
+                color = di.settingsManager().settings.currentTheme.textColor,
                 textAlign = TextAlign.Center,
                 style = TextStyle(fontSize = 13.sp),
                 modifier = Modifier
@@ -233,7 +242,7 @@ private fun MinecraftVersion(
             val formattedDate = outputFormat.format(date)
             Text(
                 text = formattedDate,
-                color = settingsManager.settings.currentTheme.textColor,
+                color = di.settingsManager().settings.currentTheme.textColor,
                 textAlign = TextAlign.Center,
                 style = TextStyle(fontSize = 13.sp),
                 modifier = Modifier

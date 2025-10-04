@@ -21,18 +21,17 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import org.kodein.di.DI
 import ua.besf0r.kovadlo.account.Account
-import ua.besf0r.kovadlo.account.AccountsUpdateEvent
 import ua.besf0r.kovadlo.accountsManager
 import ua.besf0r.kovadlo.settingsManager
 
 @Composable
-fun AccountSector() {
-    var accounts by remember { mutableStateOf(listOf<Account>()) }
-
-    AccountsUpdateEvent.subscribe { accounts = it.toMutableList() }
+fun AccountSector(
+    di: DI
+) {
     val currentAccount = remember {
-        mutableStateOf(settingsManager.settings.selectedAccount)
+        di.settingsManager().settings.selectedAccount
     }
 
     Box(
@@ -43,7 +42,7 @@ fun AccountSector() {
             .background(color = Color(0xff2d2d2d))
     ) {
         val onPirateButton = remember { mutableStateOf(false) }
-        if (onPirateButton.value) OfflineAccountDialog {
+        if (onPirateButton.value) OfflineAccountDialog(di) {
             onPirateButton.value = false
         }
         TextButton(
@@ -78,7 +77,7 @@ fun AccountSector() {
                         .align(alignment = Alignment.TopStart)
                         .offset(x = 11.dp, y = 7.dp)
                         .requiredSize(size = 18.dp),
-                    tint = settingsManager.settings.currentTheme.textColor
+                    tint = di.settingsManager().settings.currentTheme.textColor
                 )
             }
         }
@@ -86,6 +85,7 @@ fun AccountSector() {
         val onMicrosoftButton = remember { mutableStateOf(false) }
         if (onMicrosoftButton.value) {
             ParseMicrosoftAccountDialog (
+                di,
                 onDeviceCode = {
                     MicrosoftAccountDialog(it) { onMicrosoftButton.value = false }
                 },
@@ -125,12 +125,12 @@ fun AccountSector() {
                         .align(alignment = Alignment.CenterStart)
                         .offset(x = 11.dp, y = 1.dp)
                         .requiredSize(size = 18.dp),
-                    tint = settingsManager.settings.currentTheme.textColor
+                    tint = di.settingsManager().settings.currentTheme.textColor
                 )
             }
         }
         TextButton(
-            onClick = { accountsManager.deleteAccount(currentAccount.value?: "") },
+            onClick = { di.accountsManager().deleteAccount(currentAccount.value?: "") },
             modifier = Modifier
                 .align(alignment = Alignment.TopStart)
                 .offset(x = 38.dp, y = 415.dp)
@@ -161,7 +161,7 @@ fun AccountSector() {
                         .align(alignment = Alignment.TopStart)
                         .offset(x = 11.dp, y = 7.dp)
                         .requiredSize(size = 18.dp),
-                    tint = settingsManager.settings.currentTheme.textColor
+                    tint = di.settingsManager().settings.currentTheme.textColor
                 )
             }
         }
@@ -213,8 +213,8 @@ fun AccountSector() {
                     .requiredWidth(width = 441.dp)
                     .requiredHeight(height = 316.dp),
                 content = {
-                    items(accounts) {account ->
-                        AccountGrid(currentAccount,account)
+                    items(di.accountsManager().accounts) {account ->
+                        AccountGrid(di,currentAccount,account)
                     }
                 }
             )
@@ -224,15 +224,13 @@ fun AccountSector() {
 
 @Composable
 private fun AccountGrid(
+    di: DI,
     currentAccount: MutableState<String?>,
     account: Account,
 ) {
     TextButton(
         onClick = {
             currentAccount.value = account.username
-
-            val settings = settingsManager.settings
-            settings.selectedAccount = account.username
         },
         modifier = Modifier
             .requiredWidth(width = 440.dp)
@@ -244,7 +242,7 @@ private fun AccountGrid(
                 .requiredHeight(height = 25.dp)
                 .background(
                     color = if (currentAccount.value == account.username)
-                        settingsManager.settings.currentTheme.selectedButtonColor
+                        di.settingsManager().settings.currentTheme.selectedButtonColor
                     else Color.Transparent
                 )
         ) {

@@ -1,11 +1,13 @@
 package ua.besf0r.kovadlo.network.file
 
+import org.kodein.di.DI
 import ua.besf0r.kovadlo.Logger
-import ua.besf0r.kovadlo.javaDir
-import ua.besf0r.kovadlo.librariesDir
+import ua.besf0r.kovadlo.logger
 import ua.besf0r.kovadlo.minecraft.OperatingSystem
 import ua.besf0r.kovadlo.network.DownloadManager
+import ua.besf0r.kovadlo.network.DownloadService
 import ua.besf0r.kovadlo.network.file.FileManager.createFileIfNotExists
+import ua.besf0r.kovadlo.workingDirs
 import java.io.BufferedReader
 import java.io.ByteArrayOutputStream
 import java.io.IOException
@@ -16,23 +18,25 @@ import java.nio.file.Files
 import kotlin.io.path.pathString
 import kotlin.system.exitProcess
 
-object UpdaterManager {
-    private const val GITHUB_TOKEN = "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"
-    private const val GITHUB_REPO = "bezf0r/cubauncherdata"
+class UpdaterManager(
+    private val di: DI
+) {
+    private val GITHUB_TOKEN = "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"
+    private val GITHUB_REPO = "bezf0r/cubauncherdata"
 
-    private val fileDir = librariesDir.resolve("ua/besf0r/updater/updater.jar")
-    fun checkForUpdates() {
+    private val fileDir = di.workingDirs().librariesDir.resolve("ua/besf0r/updater/updater.jar")
+    suspend fun checkForUpdates() {
         try {
             val fileInfo = readConfigAsString().split(";".toRegex()).dropLastWhile {
                 it.isEmpty()
             }.toTypedArray()
 
             val expectedHash = fileInfo[0]
-            if (!DownloadManager.shouldDownloadFile(expectedHash,
+            if (!DownloadService.shouldDownload(expectedHash,
                     IOUtil.byGetProtectionDomain(UpdaterManager::class.java))) return
 
             ProcessBuilder(
-                javaDir.resolve("java-runtime-gamma").resolve("bin").resolve(OperatingSystem.javaType).pathString,
+                di.workingDirs().javaDir.resolve("java-runtime-gamma").resolve("bin").resolve(OperatingSystem.javaType).pathString,
                 "-jar", fileDir.pathString,
                 "-update", IOUtil.byGetProtectionDomain(UpdaterManager::class.java).toString()
             ).start()
@@ -77,7 +81,7 @@ object UpdaterManager {
 
             Files.write(fileDir, fileData)
         } catch (e: Exception) {
-            Logger.publish(e.stackTraceToString())
+            di.logger().publish("launcher",e.stackTraceToString())
         }
     }
     private fun HttpURLConnection.authToGit(): HttpURLConnection {

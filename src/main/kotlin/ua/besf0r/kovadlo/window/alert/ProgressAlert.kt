@@ -18,6 +18,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
+import ua.besf0r.kovadlo.AppStrings
 
 @Composable
 fun ProgressAlert(
@@ -63,7 +64,7 @@ fun ProgressAlert(
                     .offset(x = 140.dp, y = 150.dp)
             ) {
                 Text(
-                    text = "Скасувати завантаження",
+                    text = AppStrings.get("progress_dialog.cancel"),
                     color = Color(0xffec6262),
                     textAlign = TextAlign.Center,
                     style = TextStyle(
@@ -73,7 +74,7 @@ fun ProgressAlert(
                         .wrapContentHeight(align = Alignment.CenterVertically))
             }
             Text(
-                text = "завантаження...",
+                text = AppStrings.get("progress_dialog.processing"),
                 color = Color.White,
                 textAlign = TextAlign.Center,
                 style = TextStyle(

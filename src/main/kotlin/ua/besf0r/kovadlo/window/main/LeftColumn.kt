@@ -2,9 +2,15 @@ package ua.besf0r.kovadlo.window.main
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.requiredHeight
+import androidx.compose.foundation.layout.requiredWidth
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.*
+import androidx.compose.material.ButtonDefaults
+import androidx.compose.material.Icon
+import androidx.compose.material.Text
+import androidx.compose.material.TextButton
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.outlined.Delete
@@ -16,21 +22,22 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.painter.BitmapPainter
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import org.kodein.di.DI
+import ua.besf0r.kovadlo.AppStrings
 import ua.besf0r.kovadlo.instance.InstanceRunner
 import ua.besf0r.kovadlo.instanceManager
 import ua.besf0r.kovadlo.settingsManager
-import ua.besf0r.kovadlo.window.component.AsyncImage
-import ua.besf0r.kovadlo.window.component.loadImageBitmap
 import ua.besf0r.kovadlo.window.component.loadImageFromResources
-import ua.besf0r.kovadlo.workDir
+import ua.besf0r.kovadlo.workingDirs
 import java.awt.Desktop
 
 @Composable
-fun LeftColumn() {
+fun LeftColumn(
+    di: DI
+) {
     Box(
         modifier = Modifier
             .requiredWidth(width = 180.dp)
@@ -42,7 +49,7 @@ fun LeftColumn() {
                 .offset(y = 61.dp)
                 .requiredWidth(width = 180.dp)
                 .requiredHeight(height = 156.dp)
-                .background(color = settingsManager.settings.currentTheme.panelsColor)
+                .background(color = di.settingsManager().settings.currentTheme.panelsColor)
         )
         Image(
             loadImageFromResources("logo.png") ,
@@ -55,7 +62,7 @@ fun LeftColumn() {
         )
         Text(
             text = "Kovadlo",
-            color = settingsManager.settings.currentTheme.textColor,
+            color = di.settingsManager().settings.currentTheme.textColor,
             style = TextStyle(fontSize = 16.sp),
             modifier = Modifier
                 .align(alignment = Alignment.TopEnd)
@@ -67,7 +74,7 @@ fun LeftColumn() {
             modifier = Modifier
                 .requiredWidth(width = 180.dp)
                 .requiredHeight(height = 60.dp)
-                .background(color = settingsManager.settings.currentTheme.panelsColor)
+                .background(color = di.settingsManager().settings.currentTheme.panelsColor)
         )
     }
     Box(
@@ -75,17 +82,17 @@ fun LeftColumn() {
             .requiredWidth(width = 180.dp)
             .requiredHeight(height = 193.dp)
             .offset(y = 218.dp)
-            .background(color = settingsManager.settings.currentTheme.panelsColor)
+            .background(color = di.settingsManager().settings.currentTheme.panelsColor)
     ) {
         val isClickedStart = remember { mutableStateOf(false) }
 
         if (isClickedStart.value) {
             isClickedStart.value = false
 
-            val selectedInstance = settingsManager.settings.selectedInstance
+            val selectedInstance = di.settingsManager().settings.selectedInstance
             if (selectedInstance != null) {
-                val instance = instanceManager.getInstanceByName(selectedInstance) ?: return
-                InstanceRunner(instance).run()
+                val instance = di.instanceManager().getInstanceByName(selectedInstance) ?: return
+                InstanceRunner(di, instance).run()
             }
         }
         TextButton(
@@ -102,11 +109,11 @@ fun LeftColumn() {
                     .requiredWidth(width = 130.dp)
                     .requiredHeight(height = 30.dp)
                     .clip(shape = RoundedCornerShape(3.5.dp))
-                    .background(color = settingsManager.settings.currentTheme.buttonColor)
+                    .background(color = di.settingsManager().settings.currentTheme.buttonColor)
             ) {
                 Text(
-                    text = "Запуск",
-                    color = settingsManager.settings.currentTheme.textColor,
+                    text = AppStrings.get("main_screen.start_instance_button"),
+                    color = di.settingsManager().settings.currentTheme.textColor,
                     style = TextStyle(fontSize = 14.5.sp),
                     modifier = Modifier
                         .align(alignment = Alignment.Center)
@@ -122,17 +129,17 @@ fun LeftColumn() {
                         .offset(x = 10.dp)
                         .requiredWidth(width = 20.dp)
                         .requiredHeight(height = 20.dp),
-                    tint = settingsManager.settings.currentTheme.buttonIconColor
+                    tint = di.settingsManager().settings.currentTheme.buttonIconColor
                 )
             }
         }
 
         TextButton(
             onClick = {
-                val currentInstance = settingsManager.settings.selectedInstance
+                val currentInstance = di.settingsManager().settings.selectedInstance
 
-                val directory = if (currentInstance == null) workDir else{
-                    instanceManager.getMinecraftDir(currentInstance)
+                val directory = if (currentInstance == null) di.workingDirs().workDir else{
+                    di.instanceManager().getMinecraftDir(currentInstance)
                 }
 
                 val desktop = Desktop.getDesktop()
@@ -150,11 +157,11 @@ fun LeftColumn() {
                     .requiredWidth(width = 130.dp)
                     .requiredHeight(height = 30.dp)
                     .clip(shape = RoundedCornerShape(3.5.dp))
-                    .background(color = settingsManager.settings.currentTheme.buttonColor)
+                    .background(color = di.settingsManager().settings.currentTheme.buttonColor)
             ) {
                 Text(
-                    text = "Директорія",
-                    color = settingsManager.settings.currentTheme.textColor,
+                    text = AppStrings.get("main_screen.direction_instance_button"),
+                    color = di.settingsManager().settings.currentTheme.textColor,
                     style = TextStyle(fontSize = 14.5.sp),
                     modifier = Modifier
                         .align(alignment = Alignment.Center)
@@ -169,16 +176,16 @@ fun LeftColumn() {
                         .offset(x = 10.dp)
                         .requiredWidth(width = 20.dp)
                         .requiredHeight(height = 20.dp),
-                    tint = settingsManager.settings.currentTheme.buttonIconColor
+                    tint = di.settingsManager().settings.currentTheme.buttonIconColor
                 )
             }
         }
 
         TextButton(
             onClick = {
-                if (settingsManager.settings.selectedInstance == null) return@TextButton
+                if (di.settingsManager().settings.selectedInstance == null) return@TextButton
 
-                instanceManager.deleteInstance(settingsManager.settings.selectedInstance!!)
+                    di.instanceManager().deleteInstance(di.settingsManager().settings.selectedInstance!!)
             },
             colors = ButtonDefaults.buttonColors(backgroundColor = Color.Transparent),
             modifier = Modifier
@@ -194,7 +201,7 @@ fun LeftColumn() {
                     .background(color = Color(0xff464646))
             ) {
                 Text(
-                    text = "Видалити",
+                    text = AppStrings.get("main_screen.delete_instance_button"),
                     color = Color.White,
                     style = TextStyle(fontSize = 14.5.sp),
                     modifier = Modifier
@@ -211,7 +218,7 @@ fun LeftColumn() {
                         .offset(x = 10.dp)
                         .requiredWidth(width = 20.dp)
                         .requiredHeight(height = 20.dp),
-                    tint = settingsManager.settings.currentTheme.buttonIconColor
+                    tint = di.settingsManager().settings.currentTheme.buttonIconColor
                 )
             }
         }

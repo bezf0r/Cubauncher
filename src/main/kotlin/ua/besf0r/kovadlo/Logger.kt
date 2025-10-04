@@ -1,27 +1,60 @@
 package ua.besf0r.kovadlo
 
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.launch
+import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.snapshots.SnapshotStateList
+import kotlinx.coroutines.*
+import org.jetbrains.skiko.MainUIDispatcher
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 
-object Logger {
-    private val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
 
-    private val _events = MutableStateFlow("")
-    private val events = _events.asStateFlow()
+data class LogEntry(
+    val source: String,
+    val message: String,
+    val timestamp: String = LocalDateTime.now().format(DateTimeFormatter.ofPattern("HH:mm:ss"))
+)
 
-    private val lines = mutableListOf<String>()
+class Logger(
+    private val scope: CoroutineScope,
+) {
+    private val maxLines: Int = 1500
 
-    fun publish(event: String) = scope.launch {
-        _events.emit(event)
-        lines.add(event)
+    private val _lines = mutableStateListOf<LogEntry>()
+    val lines: SnapshotStateList<LogEntry> get() = _lines
+
+    private val buffer = mutableListOf<LogEntry>()
+    private val bufferLock = Any()
+
+    private var flushJob: Job? = null
+
+    fun publish(source: String, message: String) {
+        val entry = LogEntry(source, message)
+        synchronized(bufferLock) { buffer.add(entry) }
+        scheduleFlush()
     }
 
-    fun subscribe(onEvent: (List<String>) -> Unit) = scope.launch {
-        events.collectLatest { onEvent(lines) }
+    private fun scheduleFlush() {
+        if (flushJob?.isActive != true) {
+            flushJob = scope.launch(MainUIDispatcher) {
+                delay(200)
+                flushBuffer()
+            }
+        }
     }
+
+    private fun flushBuffer() {
+        val toAdd = synchronized(bufferLock) {
+            val copy = buffer.toList()
+            buffer.clear()
+            copy
+        }
+        _lines.addAll(toAdd)
+
+        if (_lines.size > maxLines) {
+            _lines.removeRange(0, _lines.size - maxLines)
+        }
+    }
+
+    fun getLogsBySource(source: String): SnapshotStateList<LogEntry> =
+        mutableStateListOf(*lines.filter { it.source == source }.toTypedArray())
 }

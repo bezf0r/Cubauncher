@@ -1,5 +1,7 @@
 package ua.besf0r.kovadlo.account
 
+import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableStateOf
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
@@ -10,12 +12,16 @@ import kotlinx.serialization.json.Json
 import org.jetbrains.skiko.MainUIDispatcher
 import ua.besf0r.kovadlo.network.file.FileManager.createFileIfNotExists
 import ua.besf0r.kovadlo.network.file.IOUtil
+import ua.besf0r.kovadlo.settings.SettingsManager
+import ua.besf0r.kovadlo.settingsManager
 import java.io.IOException
 import java.nio.file.Path
 
-class AccountsManager(workDir: Path) {
+class AccountsManager(
+    workDir: Path
+) {
     private val accountsFile: Path = workDir.resolve("accounts.json")
-    var accounts: MutableList<Account> = mutableListOf()
+    var accounts = mutableStateListOf<Account>()
 
     private val json = Json {
         serializersModule = Account.accountModule
@@ -36,7 +42,6 @@ class AccountsManager(workDir: Path) {
         if (accounts.getByName(account.username) != null) return
 
         accounts.add(account)
-        AccountsUpdateEvent.publish(accounts)
         save()
     }
 
@@ -44,14 +49,13 @@ class AccountsManager(workDir: Path) {
         if (accounts.getByName(nickname) == null) return
 
         accounts.remove(accounts.getByName(nickname))
-        AccountsUpdateEvent.publish(accounts)
         save()
     }
 
     @Throws(IOException::class)
     fun save() {
         try {
-            val json = json.encodeToString(accounts)
+            val json = json.encodeToString(accounts.toList())
             IOUtil.writeUtf8String(accountsFile, json)
         } catch (e: IOException) {
             throw Exception("Failed to save accounts",e)
@@ -60,21 +64,4 @@ class AccountsManager(workDir: Path) {
 }
 fun MutableList<Account>.getByName(nickname: String): Account? {
     return this.find { it.username == nickname }
-}
-object AccountsUpdateEvent {
-    private val _events = MutableSharedFlow<List<Account>>()
-    private val events = _events.asSharedFlow()
-
-    fun publish(event: List<Account>) = CoroutineScope(Dispatchers.IO).launch {
-        _events.emit(event)
-    }
-
-
-    fun subscribe(onEvent: (List<Account>) -> Unit) = CoroutineScope(Dispatchers.IO).launch {
-        events.filterIsInstance<List<Account>>()
-            .collectLatest { event ->
-                coroutineContext.ensureActive()
-                withContext(MainUIDispatcher){ onEvent(event) }
-            }
-    }
 }

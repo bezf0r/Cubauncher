@@ -22,7 +22,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.rememberWindowState
-import ua.besf0r.kovadlo.account.AccountsUpdateEvent
+import org.kodein.di.DI
+import ua.besf0r.kovadlo.AppStrings
 import ua.besf0r.kovadlo.accountsManager
 import ua.besf0r.kovadlo.launcherVersion
 import ua.besf0r.kovadlo.settings.SettingsManager
@@ -34,6 +35,7 @@ import ua.besf0r.kovadlo.window.settings.account.AccountSector
 
 @Composable
 fun SettingWindow(
+    di: DI,
     currentSelection: SettingsSection? = null,
     onDismiss: () -> Unit,
 ) {
@@ -45,7 +47,7 @@ fun SettingWindow(
 
     Window(
         icon = painterResource("logo.png"),
-        title = "Kovadlo ($launcherVersion) - налаштування",
+        title = "Kovadlo ${AppStrings.get("create_instance_screen.window_name", launcherVersion)}",
         state = windowState,
         resizable = false,
         undecorated = true,
@@ -53,7 +55,7 @@ fun SettingWindow(
     ) {
         Box(
             modifier = Modifier.fillMaxSize().background(
-                settingsManager.settings.currentTheme.fontColor
+                di.settingsManager().settings.currentTheme.fontColor
             )
         )
 
@@ -100,7 +102,7 @@ fun SettingWindow(
                         .requiredHeight(height = 35.dp)
                         .background(selectedSection.generateColorForButton(
                             SettingsSection.CONSOLE,
-                            settingsManager
+                            di.settingsManager()
                         ))
                 ) {
                     Text(
@@ -140,7 +142,7 @@ fun SettingWindow(
                         .requiredHeight(height = 35.dp)
                         .background(selectedSection.generateColorForButton(
                             SettingsSection.JAVA,
-                            settingsManager
+                            di.settingsManager()
                         ))
                 ) {
                     Text(
@@ -179,7 +181,7 @@ fun SettingWindow(
                         .requiredHeight(height = 35.dp)
                         .background(selectedSection.generateColorForButton(
                             SettingsSection.ACCOUNT,
-                            settingsManager
+                            di.settingsManager()
                         ))
                 ) {
                     Text(
@@ -197,23 +199,22 @@ fun SettingWindow(
                             .align(alignment = Alignment.CenterStart)
                             .offset(x = 38.dp)
                             .requiredSize(size = 20.dp),
-                        tint = settingsManager.settings.currentTheme.textColor
+                        tint = di.settingsManager().settings.currentTheme.textColor
                     )
                 }
             }
         }
         when (selectedSection.value) {
             SettingsSection.CONSOLE -> {
-                ConsoleSector()
+                ConsoleSector(di)
             }
 
             SettingsSection.JAVA -> {
-                JavaSector()
+                JavaSector(di)
             }
 
             SettingsSection.ACCOUNT -> {
-                AccountSector()
-                AccountsUpdateEvent.publish(accountsManager.accounts)
+                AccountSector(di)
             }
         }
         createMainTitleBar(windowState) { onDismiss() }

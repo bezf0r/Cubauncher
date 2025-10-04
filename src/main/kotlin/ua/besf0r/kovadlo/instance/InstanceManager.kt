@@ -1,56 +1,95 @@
 package ua.besf0r.kovadlo.instance
 
+import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.ui.platform.LocalLocalization
 import kotlinx.coroutines.*
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
-import ua.besf0r.kovadlo.instancesDir
+import kotlinx.serialization.modules.SerializersModule
+import org.jetbrains.skiko.MainUIDispatcher
+import ua.besf0r.kovadlo.LocalAppStrings
+import ua.besf0r.kovadlo.settings.directories.WorkingDirs
 import ua.besf0r.kovadlo.minecraft.OperatingSystem
+import ua.besf0r.kovadlo.minecraft.forge.newprofile.ForgeNewInstallProfile
+import ua.besf0r.kovadlo.minecraft.forge.newprofile.NewProfilePathSerializer
+import ua.besf0r.kovadlo.minecraft.forge.oldprofile.ForgeOldIntallProfile
+import ua.besf0r.kovadlo.minecraft.forge.oldprofile.OldProfilePathSerializer
+import ua.besf0r.kovadlo.minecraft.liteloader.LiteLoaderPathSerializer
+import ua.besf0r.kovadlo.minecraft.liteloader.LiteLoaderProfile
 import ua.besf0r.kovadlo.network.file.FileManager
 import ua.besf0r.kovadlo.network.file.FileManager.createDirectoryIfNotExists
 import ua.besf0r.kovadlo.network.file.FileManager.createFileIfNotExists
 import ua.besf0r.kovadlo.network.file.IOUtil
-import ua.besf0r.kovadlo.settingsManager
-import java.io.File
+import ua.besf0r.kovadlo.settings.SettingsManager
 import java.io.IOException
+import java.nio.file.FileSystems
 import java.nio.file.Files
 import java.nio.file.Path
+import java.nio.file.StandardWatchEventKinds
 import kotlin.io.path.exists
 
-
 class InstanceManager(
-    private val workDir: Path
+    coroutineScope: CoroutineScope,
+    private val workingDirs: WorkingDirs,
+    private val settingsManager: SettingsManager
 ) {
-    val instances = mutableListOf<Instance>()
+    val instances = mutableStateListOf<Instance>()
 
     private val minecraftDirName: String =
         if (OperatingSystem.oS == OperatingSystem.MACOS) "minecraft" else ".minecraft"
 
     init {
         try {
-            instancesDir.createDirectoryIfNotExists()
+            workingDirs.instancesDir.createDirectoryIfNotExists()
         } catch (e: IOException) {
             throw RuntimeException(e)
         }
+        watchInstancesDir(coroutineScope)
     }
 
-    private val json = Json { ignoreUnknownKeys = true }
+    private val module = SerializersModule {
+        contextual(ForgeNewInstallProfile::class, NewProfilePathSerializer(workingDirs))
+        contextual(ForgeOldIntallProfile.VersionInfo::class, OldProfilePathSerializer(workingDirs))
+        contextual(LiteLoaderProfile::class, LiteLoaderPathSerializer(workingDirs))
+    }
 
-    @Throws(IOException::class)
+    private val json = Json {
+        ignoreUnknownKeys = true
+        serializersModule = module
+    }
+
     fun loadInstances() {
+        val loaded = workingDirs.instancesDir.toFile()
+            .listFiles()
+            ?.filter { it.isDirectory && it.resolve("instance.json").exists() }
+            ?.map { file ->
+                json.decodeFromString<Instance>(
+                    IOUtil.readUtf8String(file.resolve("instance.json").toPath())
+                )
+            } ?: emptyList()
+
         instances.clear()
+        instances.addAll(loaded)
+    }
 
-        val paths = mutableListOf<File>()
+    private fun watchInstancesDir(scope: CoroutineScope) {
+        scope.launch(Dispatchers.IO) {
+            val watcher = FileSystems.getDefault().newWatchService()
+            workingDirs.instancesDir.register(
+                watcher,
+                StandardWatchEventKinds.ENTRY_CREATE,
+                StandardWatchEventKinds.ENTRY_DELETE,
+                StandardWatchEventKinds.ENTRY_MODIFY
+            )
 
-        workDir.toFile().listFiles()?.forEach { paths.add(it) }
-        paths.forEach {
-            if (!it.isDirectory) return@forEach
-
-            val instanceFile = it.resolve("instance.json")
-            if (!instanceFile.exists()) return@forEach
-
-            val instance = json.decodeFromString<Instance>(
-                IOUtil.readUtf8String(instanceFile.toPath()))
-            instances.add(instance)
+            while (isActive) {
+                val key = watcher.take()
+                key.reset()
+                withContext(MainUIDispatcher) {
+                    loadInstances()
+                }
+                delay(300)
+            }
         }
     }
 
@@ -81,7 +120,7 @@ class InstanceManager(
         createDirName(instance)
 
         val instanceDir = getInstanceDir(instance)
-        instancesDir.createDirectoryIfNotExists()
+        workingDirs.instancesDir.createDirectoryIfNotExists()
 
         val minecraftDir = instanceDir.resolve(minecraftDirName)
         minecraftDir.createDirectoryIfNotExists()
@@ -109,15 +148,15 @@ class InstanceManager(
     }
 
     private fun getInstanceDir(instance: Instance): Path {
-        return workDir.resolve(instance.name)
+        return workingDirs.instancesDir.resolve(instance.name)
     }
 
     fun getMinecraftDir(instance: Instance): Path {
-        return workDir.resolve(instance.name).resolve(".minecraft")
+        return workingDirs.instancesDir.resolve(instance.name).resolve(".minecraft")
     }
 
     fun getMinecraftDir(instance: String): Path {
-        return workDir.resolve(instance).resolve(".minecraft")
+        return workingDirs.instancesDir.resolve(instance).resolve(".minecraft")
     }
 
     fun getInstanceByName(name: String): Instance? {

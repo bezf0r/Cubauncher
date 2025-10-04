@@ -1,0 +1,35 @@
+{
+  "main_screen": {
+    "create_instance_button": "Створити збірку",
+    "settings_button": "Налаштування",
+    "account_button": "Аккаунт",
+    "help_button": "Допомога",
+    "start_instance_button": "Запуск",
+    "direction_instance_button": "Директорія",
+    "delete_instance_button": "Видалити"
+  },
+  "progress_dialog": {
+    "cancel": "Скасувати завантаження",
+    "processing": "завантаження..."
+  },
+  "create_instance_screen": {
+    "window_name": "%s - створити збірку",
+    "name_of_instance": "Назва збірки:",
+
+    "version": "Версія",
+    "release_date": "Дата виходу",
+    "filter": "Фільтр:",
+    "snapshots": "Знімки",
+    "releases": "Релізи",
+
+    "modification_version": "Версія",
+    "modification_name": "Завантажувач модів:",
+    "without_modification": "Без завантажуча",
+
+    "create_button": "Створити збірку",
+    "close_screen_button": "Закрити"
+  },
+  "settings_screen": {
+    "window_name": "%s - налаштування"
+  }
+}

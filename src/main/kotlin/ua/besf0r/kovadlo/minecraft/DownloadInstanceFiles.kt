@@ -6,20 +6,20 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import kotlinx.coroutines.*
 import kotlinx.serialization.json.Json
-import ua.besf0r.kovadlo.Logger
-import ua.besf0r.kovadlo.instanceManager
+import org.kodein.di.DI
+import ua.besf0r.kovadlo.*
 import ua.besf0r.kovadlo.minecraft.forge.ForgeInstaller
 import ua.besf0r.kovadlo.minecraft.minecraft.MinecraftDownloader
 import ua.besf0r.kovadlo.minecraft.optifine.OptiFineInstaller
 import ua.besf0r.kovadlo.minecraft.minecraft.MinecraftVersion
 import ua.besf0r.kovadlo.network.DownloadListener
 import ua.besf0r.kovadlo.network.file.IOUtil
-import ua.besf0r.kovadlo.versionsDir
 import ua.besf0r.kovadlo.window.alert.ProgressAlert
 import ua.besf0r.kovadlo.window.instance.create.CreateInstanceData
 
 @Composable
 fun downloadFiles(
+    di: DI,
     screenData: MutableState<CreateInstanceData>,
     isDismiss: MutableState<Boolean>
 ) {
@@ -33,8 +33,6 @@ fun downloadFiles(
     val rememberStage = remember { mutableStateOf<String?>(null) }
     val rememberRate = remember { mutableStateOf(0) }
 
-    val currentJob = CoroutineScope(Job())
-
     val downloadListener = object : DownloadListener {
         override fun onStageChanged(stage: String) { rememberStage.value = stage }
         override fun onProgress(value: Long, size: Long) {
@@ -44,7 +42,7 @@ fun downloadFiles(
             }catch (_: Exception){}
         }
     }
-    val minecraftDownloader = MinecraftDownloader(currentJob, downloadListener)
+    val minecraftDownloader = MinecraftDownloader(di, downloadListener)
 
     ProgressAlert(rememberStage, rememberRate) {
         isDismiss.value = false
@@ -53,15 +51,15 @@ fun downloadFiles(
         )
     }
 
-    currentJob.launch {
+    di.coroutine().launch {
         runBlocking {
             if (selectedVersion == null) return@runBlocking
             val correctName = instanceName?: selectedVersion.id
-            val instance = instanceManager.createInstance(correctName,selectedVersion.id)
+            val instance = di.instanceManager().createInstance(correctName,selectedVersion.id)
 
             val startTime = minecraftDownloader.downloadMinecraft(instance)
 
-            val versionInfoFile = versionsDir.resolve(selectedVersion.id)
+            val versionInfoFile = di.workingDirs().versionsDir.resolve(selectedVersion.id)
                 .resolve("${selectedVersion.id}.json")
             val versionInfo = json.decodeFromString<MinecraftVersion>(IOUtil.readUtf8String(versionInfoFile))
 
@@ -74,14 +72,14 @@ fun downloadFiles(
             if (modManager is ForgeInstaller){
                 val optifineVersion = screenData.value.optifineVersion
                 if (screenData.value.hasOptifine && optifineVersion != null)
-                    OptiFineInstaller().download(downloadListener,optifineVersion,instance)
+                    OptiFineInstaller(di).download(downloadListener,optifineVersion,instance)
             }
 
             val endTime = System.currentTimeMillis()
             val duration = ((endTime - startTime).toInt())
-            Logger.publish("Час завантаження - ${(duration.toDouble() / 60000.0)} хв")
+            di.logger().publish("launcher","Час завантаження - ${(duration.toDouble() / 60000.0)} хв")
 
-            instanceManager.update(instance)
+            di.instanceManager().update(instance)
             isDismiss.value = false
         }
     }

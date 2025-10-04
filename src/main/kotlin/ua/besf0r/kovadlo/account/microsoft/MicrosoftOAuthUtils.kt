@@ -11,22 +11,27 @@ import kotlinx.coroutines.*
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
+import org.kodein.di.DI
 import ua.besf0r.kovadlo.Logger
 import ua.besf0r.kovadlo.account.Account
 import ua.besf0r.kovadlo.account.MicrosoftAccount
 import ua.besf0r.kovadlo.httpClient
 import java.util.concurrent.TimeoutException
 
-object MicrosoftOAuthUtils {
-    private const val CLIENT_ID = "feb3836f-0333-4185-8eb9-4cbf0498f947"
-    private const val TENANT = "consumers"
+class MicrosoftOAuthUtils(
+    private val logger: Logger,
+    private val httpClient: HttpClient,
+    private val coroutineScope: CoroutineScope
+) {
+    private val CLIENT_ID = "feb3836f-0333-4185-8eb9-4cbf0498f947"
+    private val TENANT = "consumers"
 
-    private const val DEVICE_CODE_URL = "https://login.microsoftonline.com/$TENANT/oauth2/v2.0/devicecode"
-    private const val TOKEN_CHECK_URL = "https://login.microsoftonline.com/$TENANT/oauth2/v2.0/token"
-    private const val XBOX_LIVE_AUTH_URL = "https://user.auth.xboxlive.com/user/authenticate"
-    private const val XSTS_URL = "https://xsts.auth.xboxlive.com/xsts/authorize"
-    private const val LOGIN_WITH_XBOX_URL = "https://api.minecraftservices.com/authentication/login_with_xbox"
-    private const val MAX_CHECK_TIME = 900
+    private val DEVICE_CODE_URL = "https://login.microsoftonline.com/$TENANT/oauth2/v2.0/devicecode"
+    private val TOKEN_CHECK_URL = "https://login.microsoftonline.com/$TENANT/oauth2/v2.0/token"
+    private val XBOX_LIVE_AUTH_URL = "https://user.auth.xboxlive.com/user/authenticate"
+    private val XSTS_URL = "https://xsts.auth.xboxlive.com/xsts/authorize"
+    private val LOGIN_WITH_XBOX_URL = "https://api.minecraftservices.com/authentication/login_with_xbox"
+    private val MAX_CHECK_TIME = 900
 
     var currentCallBack: MicrosoftDeviceCode? = null
 
@@ -35,12 +40,12 @@ object MicrosoftOAuthUtils {
         deviceCodeCallback: (MicrosoftDeviceCode) -> Unit,
         errorCallback: (Throwable) -> Unit,
         successCallback: (AuthenticationResponse) -> Unit
-    ) = CoroutineScope(Dispatchers.IO).launch {
+    ) = coroutineScope.launch {
         try {
             val deviceCodeDeferred = async { obtainDeviceCode() }
             val deviceCode = deviceCodeDeferred.await() ?: return@launch
 
-            Logger.publish("Код авторизації Microsoft: ${deviceCode.userCode}")
+            logger.publish ("launcher","Код авторизації Microsoft: ${deviceCode.userCode}")
             deviceCodeCallback(deviceCode)
             currentCallBack = deviceCode
 
@@ -53,7 +58,7 @@ object MicrosoftOAuthUtils {
                     val time = System.currentTimeMillis() / 1000
                     if (time > start + MAX_CHECK_TIME) {
                         throw TimeoutException("Час вийшов,не вдалося успішно авторизуватися: ${deviceCode.userCode}").apply {
-                            Logger.publish(stackTraceToString())
+                            logger.publish ("launcher",stackTraceToString())
                         }
                     }
 
@@ -61,7 +66,7 @@ object MicrosoftOAuthUtils {
                         delay(deviceCode.interval * 1000L)
                         checkToken()
                     } else {
-                        Logger.publish("Код (${deviceCode.userCode}) успішно авторизований, заходимо в аккаунт ...")
+                        logger.publish ("launcher","Код (${deviceCode.userCode}) успішно авторизований, заходимо в аккаунт ...")
                         successCallback(response)
                     }
                 } catch (exception: Throwable) {
@@ -138,7 +143,7 @@ object MicrosoftOAuthUtils {
         onLogin: (Account) -> Unit
     ) {
        runBlocking {
-           Logger.publish("Авторизація в Microsoft аккаунт...")
+           logger.publish ("launcher","Авторизація в Microsoft аккаунт...")
 
            val msaTokens = response.saveTokens()
            val xboxLiveToken = getXboxLiveToken(msaTokens) ?: return@runBlocking
@@ -146,7 +151,7 @@ object MicrosoftOAuthUtils {
 
            val minecraftToken = getMinecraftBearerAccessToken(xboxLiveToken, xstsToken)?.saveTokens() ?: return@runBlocking
 
-           AccountUtil.fetchMinecraftProfile(minecraftToken) { profile ->
+           AccountUtil(httpClient).fetchMinecraftProfile(minecraftToken) { profile ->
                val account = MicrosoftAccount(
                    uuid = profile.id,
                    username = profile.name,

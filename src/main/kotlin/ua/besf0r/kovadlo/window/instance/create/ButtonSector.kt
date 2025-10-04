@@ -21,10 +21,13 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import org.kodein.di.DI
+import ua.besf0r.kovadlo.AppStrings
 import ua.besf0r.kovadlo.settingsManager
 
 @Composable
 fun ButtonsSector(
+    di: DI,
     canStartDownload: MutableState<Boolean>,
     onDismissRequest: () -> Unit
 ) {
@@ -52,7 +55,7 @@ fun ButtonsSector(
                 .background(color = Color(0xff464646))
         ) {
             Text(
-                text = "Створити збірку",
+                text = AppStrings.get("create_instance_screen.create_button"),
                 color = Color.White,
                 style = TextStyle(fontSize = 14.sp),
                 modifier = Modifier
@@ -64,7 +67,7 @@ fun ButtonsSector(
             Icon(
                 imageVector = Icons.Filled.AddCircle,
                 contentDescription = "",
-                tint = settingsManager.settings.currentTheme.buttonIconColor,
+                tint = di.settingsManager().settings.currentTheme.buttonIconColor,
                 modifier = Modifier
                     .align(alignment = Alignment.TopStart)
                     .offset(x = 12.dp, y = 6.dp)
@@ -88,7 +91,7 @@ fun ButtonsSector(
                 .background(color = Color(0xff464646))
         ) {
             Text(
-                text = "Закрити",
+                text = AppStrings.get("create_instance_screen.close_screen_button"),
                 color = Color.White,
                 style = TextStyle(fontSize = 14.sp),
                 modifier = Modifier
@@ -100,7 +103,7 @@ fun ButtonsSector(
             Icon(
                 imageVector = Icons.Filled.Close,
                 contentDescription = "",
-                tint = settingsManager.settings.currentTheme.buttonIconColor,
+                tint = di.settingsManager().settings.currentTheme.buttonIconColor,
                 modifier = Modifier
                     .align(alignment = Alignment.TopStart)
                     .offset(x = 12.dp, y = 6.dp)

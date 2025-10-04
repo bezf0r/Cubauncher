@@ -23,21 +23,14 @@ import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.async
 import org.jetbrains.skiko.MainUIDispatcher
+import org.kodein.di.DI
 import ua.besf0r.kovadlo.Logger
+import ua.besf0r.kovadlo.logger
 
 @Composable
-fun ConsoleSector() {
-    val logs = remember { mutableStateOf("") }
-
-    try {
-        Logger.subscribe {
-            CoroutineScope(MainUIDispatcher).async{
-                logs.value = it.joinToString("\n")
-            }
-        }
-    }catch (_: Exception){}
-
-
+fun ConsoleSector(
+    di: DI
+) {
     Box(
         modifier = Modifier
             .offset(x = 195.dp)
@@ -73,7 +66,7 @@ fun ConsoleSector() {
 
             SelectionContainer {
                 Text(
-                    text = logs.value,
+                    text = di.logger().lines.map { "[${it.timestamp}/${it.source}] -> ${it.message}" }.joinToString("\n"),
                     color = Color.White,
                     style = TextStyle(fontSize = 10.sp, fontWeight = FontWeight.Medium),
                     modifier = Modifier
